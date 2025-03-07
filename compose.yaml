@@ -1,0 +1,13 @@
+services:
+    mashtoo:
+        build:
+            context: .
+        container_name: mashtoo
+        environment:
+            - ARCH=${ARCH}
+            - MICROARCH=${MICROARCH}
+            - SUFFIX=${SUFFIX}
+            - USB_DEVICE=${USB_DEVICE}
+        privileged: true
+        devices:
+            - /dev:/dev
