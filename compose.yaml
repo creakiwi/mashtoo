@@ -2,12 +2,25 @@ services:
     mashtoo:
         build:
             context: .
+            args:
+                ARCH: ${ARCH:-amd64}
+                MICROARCH: ${MICROARCH:-}
+                DIST: ${DIST:-debian}
+                VERSION: ${VERSION:-latest}
+                NETINST: ${NETINST:-0}
         container_name: mashtoo
         environment:
-            - ARCH=${ARCH}
-            - MICROARCH=${MICROARCH}
-            - SUFFIX=${SUFFIX}
-            - USB_DEVICE=${USB_DEVICE}
-        privileged: true
-        devices:
-            - /dev:/dev
+            - ARCH=${ARCH:-amd64}
+            - MICROARCH=${MICROARCH:-}
+            - DIST=${DIST:-debian}
+            - VERSION=${VERSION:-latest}
+            - NETINST=${NETINST:-0}
+#            - SUFFIX=${SUFFIX}
+#            - USB_DEVICE=${USB_DEVICE}
+#        privileged: true
+#        devices:
+#            - /dev:/dev
+
+networks:
+    mashtoo:
+        name: mashtoo

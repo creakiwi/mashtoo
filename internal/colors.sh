@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# FOREGROUND COLORS
+
+FCDEF="\e[0m"
+FCRED="\e[31m"
+FCGREEN="\e[32m"
+FCYELLOW="\e[33m"
+FCBLUE="\e[34m"
+FCMAGENTA="\e[35m"
+FCCYAN="\e[36m"
+FCWHITE="\e[97m"
+
+# BACKGROUND COLORS
+BCDEF="\e[0m"
+BCRED="\e[41m"
+BCGREEN="\e[42m"
+BCYELLOW="\e[43m"
+BCBLUE="\e[44m"
+BCMAGENTA="\e[45m"
+BCCYAN="\e[46m"
+BCWHITE="\e[47m"
+
+# STYLES
+
+FBOLD="\e[1m"
+FBOLD_OFF="\e[22m"
