@@ -4,17 +4,33 @@
 # EXIT METHODS #
 ################
 
-# usage: exit_error [error_code(int) [error_msg](str)]
+# usage: exit_error [error_code](int) [error_msg](str)
 exit_error()
 {
 	if [ ${#} -eq 2 ]
 	then
-		echo ${2} >&2
+		echo_ko "${2}"
 	fi
 
 	if [ $# -ge 1 ]
 	then
-		exit ${1}
+		exit $1
+	else
+		exit 1
+	fi
+}
+
+# usage: exit_warn [warn_code](int) [warn_msg](str)
+exit_warn()
+{
+	if [ ${#} -eq 2 ]
+	then
+		echo_warn "${2}"
+	fi
+
+	if [ $# -ge 1 ]
+	then
+		exit $1
 	else
 		exit 1
 	fi
@@ -46,38 +62,113 @@ equals_or_exit()
 	fi
 }
 
+##########
+# LOGGER #
+##########
+
+# usage: _log_level_priority <level>(str)
+_log_level_priority() {
+	check_arguments $# 1 "_log_level_priority <level>(str)"
+  case "$1" in
+    ERROR) echo 1 ;;
+    WARN)  echo 2 ;;
+    INFO)  echo 3 ;;
+    DEBUG) echo 4 ;;
+    ALL)   echo 5 ;;
+    *)     echo 99 ;;
+  esac
+}
+
+# usage: log <level>(str) <message>(str)
+log()
+{
+  check_arguments $# 2 "log <level>(str) <message>(str)"
+  CURRENT_LOG_LEVEL=$(_log_level_priority "${LOG_LEVEL}")
+  MESSAGE_LOG_LEVEL=$(_log_level_priority "${1}")
+  if [ ${MESSAGE_LOG_LEVEL} -le ${CURRENT_LOG_LEVEL} ]
+  then
+    echo "[${1}] ${2}" >> "${MAIN_DIR}/report.log"
+  fi
+}
+
+# usage: log_info <message>(str)
+log_info()
+{
+	check_arguments $# 1 "log_info <message>(str)"
+  log "INFO" "${1}"
+}
+
+# usage: log_error <message>(str)
+log_error()
+{
+	check_arguments $# 1 "log_error <message>(str)"
+  log "ERROR" "${1}"
+}
+
+# usage: log_warn <message>(str)
+log_warn()
+{
+	check_arguments $# 1 "log_warn <message>(str)"
+  log "WARN" "${1}"
+}
+
+# usage: log_debug <message>(str)
+log_debug()
+{
+	check_arguments $# 1 "log_debug <message>(str)"
+  log "DEBUG" "${1}"
+}
+
 ################
 # INPUT/OUTPUT #
 ################
 
-# usage: echo_ok [message]<str>
+# usage: echo_ok [message](str)
 echo_ok()
 {
 	if [ -n "$1" ]
 	then
-		echo -e "${FCGREEN}${FBOLD}[OK]${FBOLD_OFF} ${1}${FCDEF}"
+	  log_info "${1}"
+		echo -e "${FCGREEN}${1} ${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
 	else
 		echo -e "${FCGREEN}${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
 	fi
 }
 
-# usage: echo_warning [message]<str>
-echo_warn()
+# usage: echo_info <message>(str)
+echo_info()
 {
-	if [ -n "$1" ]
-	then
-		echo -e "${FCYELLOW}${FBOLD}[!!]${FBOLD_OFF} ${1}${FCDEF}"
-	else
-		echo -e "${FCYELLOW}${FBOLD}[!!]${FBOLD_OFF}${FCDEF}"
-	fi
+	check_arguments $# 1 "echo_info <message>(str)"
+
+  log_info "${1}"
+  echo -e "${FCBLUE}${FBOLD}[*]${FBOLD_OFF} ${1}${FCDEF}"
 }
 
-# usage: echo_ok [message]<str>
+# usage: echo_debug <message>(str)
+echo_debug()
+{
+	check_arguments $# 1 "echo_debug <message>(str)"
+
+  log_debug "${1}"
+  echo -e "${FCMAGENTA}${FBOLD}[#]${FBOLD_OFF} ${1}${FCDEF}"
+}
+
+# usage: echo_warn <message>(str)
+echo_warn()
+{
+	check_arguments $# 1 "echo_warn <message>(str)"
+
+  log_warn "${1}"
+  echo -e "${FCYELLOW}${FBOLD}[!️]${FBOLD_OFF} ${1}${FCDEF}"
+}
+
+# usage: echo_ko [message](str)
 echo_ko()
 {
 	if [ -n "$1" ]
 	then
-		echo -e "${FCRED}${FBOLD}[KO]${FBOLD_OFF} ${1}${FCDEF}"
+	  log_error "${1}"
+		echo -e "${FCRED}${1} ${FBOLD}[KO]${FBOLD_OFF}${FCDEF}"
 	else
 		echo -e "${FCRED}${FBOLD}[KO]${FBOLD_OFF}${FCDEF}"
 	fi
@@ -86,7 +177,7 @@ echo_ko()
 # usage: repeat <character>(int|str|chr) <number of times>(int)
 repeat()
 {
-	check_arguments $# 2 "function repeat require two parameters character to repeat and number of times\nusage: repeat <character>(int|str|chr) <number of times>(int)"
+	check_arguments $# 2 "repeat <character>(int|str|chr) <number of times>(int)"
 
 	local start=1
 	local end=${1:-80}
@@ -98,10 +189,10 @@ repeat()
 	done
 }
 
-# usage: title <title>(mixed)
+# usage: title <title>(str)
 title()
 {
-	check_arguments $# 1 "title <title>"
+	check_arguments $# 1 "title <title>(str)"
 
 	local SEPARATORS=$((${#1}+4))
 	local TITLE="# ${1} #"
@@ -114,6 +205,7 @@ title()
 	echo ""
 }
 
+# usage: obfuscate <string>(str)
 obfuscate()
 {
 	check_arguments $# 1 "obfuscate <string>(str)"
@@ -127,6 +219,7 @@ obfuscate()
 	echo ${OBFUSCATED}
 }
 
+# usage: ask <prompt>(str) [default_value](str)
 ask()
 {
 	check_arguments $# 1 "ask <prompt>(str) [default_value](str)"
@@ -145,6 +238,7 @@ ask()
 	echo ${ASK}
 }
 
+# usage: ask_hidden <prompt>(str) [default_value](str)
 ask_hidden()
 {
 	check_arguments $# 1 "ask_hidden <prompt>(str) [default_value](str)"
@@ -187,6 +281,7 @@ diff_timestamp()
 	fi
 }
 
+# usage: readabie_time <timestamp>(int)
 readabie_time()
 {
 	check_arguments $# 1 "readabie_time <timestamp>(int)"

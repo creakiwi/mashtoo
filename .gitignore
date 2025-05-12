@@ -1,1 +1,4 @@
 .idea/
+report.log
+downloads/*
+!downloads/.gitkeep

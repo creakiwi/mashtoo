@@ -8,6 +8,9 @@ services:
                 DIST: ${DIST:-debian}
                 VERSION: ${VERSION:-latest}
                 NETINST: ${NETINST:-0}
+                SYSINIT: ${SYSINIT:-systemd}
+                LOG_LEVEL: ${LOG_LEVEL:-ALL}
+
         container_name: mashtoo
         environment:
             - ARCH=${ARCH:-amd64}
@@ -15,12 +18,16 @@ services:
             - DIST=${DIST:-debian}
             - VERSION=${VERSION:-latest}
             - NETINST=${NETINST:-0}
+            - SYSINIT=${SYSINIT:-systemd}
+            - LOG_LEVEL=${LOG_LEVEL:-ALL}
 #            - SUFFIX=${SUFFIX}
 #            - USB_DEVICE=${USB_DEVICE}
 #        privileged: true
 #        devices:
 #            - /dev:/dev
+        volumes:
+            - ./:/home/mashtoo
 
-networks:
-    mashtoo:
-        name: mashtoo
+#networks:
+#    mashtoo:
+#        name: mashtoo

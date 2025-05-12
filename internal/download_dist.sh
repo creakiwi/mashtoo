@@ -8,7 +8,8 @@ download_dist() {
   then
     . "$DIST_FILE"
 
-    if command -v download_dist_${DIST} >/dev/null 2>&1; then
+    if command -v download_dist_${DIST} >/dev/null 2>&1
+    then
       echo_ok "Entering '$DIST' distribution process..."
       download_dist_${DIST}
     else
