@@ -2,3 +2,5 @@
 report.log
 downloads/*
 !downloads/.gitkeep
+mnt/livecd/*
+!mnt/livecd/.gitkeep

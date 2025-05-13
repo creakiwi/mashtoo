@@ -1,7 +1,5 @@
 #!/bin/sh
 
-BASE_URL="https://gentoo.osuosl.org/releases"
-
 download_dist_gentoo() {
   case ${ARCH} in
     # CPU 64
@@ -27,16 +25,23 @@ download_dist_gentoo() {
 
   echo_warn "Ignore version '${VERSION}' for gentoo, always use 'latest'"
   VERSION="latest"
-  BASE_URL="${BASE_URL}/${DEFINED_ARCH}/autobuilds/"
-  GPG_ISO_URL="${BASE_URL}latest-"
+
+  if [ -f `livecd_iso_path` ] && [ -r `livecd_iso_path` ]
+  then
+    echo_info "`livecd_iso` in `download_dir` already exists, ignore download."
+    return 0
+  fi
+
+  local BASE_URL="https://gentoo.osuosl.org/releases/${DEFINED_ARCH}/autobuilds/"
+  local GPG_ISO_URL="${BASE_URL}latest-"
   if [ ${NETINST} -eq 1 ]
   then
     GPG_ISO_URL="${GPG_ISO_URL}install-${DEFINED_ARCH}-minimal.txt"
   else
     GPG_ISO_URL="${GPG_ISO_URL}livegui-${DEFINED_ARCH}.txt"
   fi
-  ISO_URL=$(wget -q -O - "${GPG_ISO_URL}" | grep -oE '[0-9]{8}T[0-9]{6}Z/.*\.iso')
-  ISO_URL="${BASE_URL}${ISO_URL}"
-  echo_info "Downloading ${ISO_URL}..."
-  wget -O ${DOWNLOAD_DIR}/livecd-${DIST}-${ARCH}-${VERSION}.iso ${ISO_URL}
+  local ISO_URL=$(wget -q -O - "${GPG_ISO_URL}" | grep -oE '[0-9]{8}T[0-9]{6}Z/.*\.iso')
+  local ISO_URL_PATH="${BASE_URL}${ISO_URL}"
+  echo_info "Downloading ${ISO_URL_PATH}..."
+  wget -O `livecd_iso_path` ${ISO_URL_PATH}
 }
