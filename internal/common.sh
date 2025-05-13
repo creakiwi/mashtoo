@@ -83,11 +83,13 @@ _log_level_priority() {
 log()
 {
   check_arguments $# 2 "log <level>(str) <message>(str)"
-  CURRENT_LOG_LEVEL=$(_log_level_priority "${LOG_LEVEL}")
-  MESSAGE_LOG_LEVEL=$(_log_level_priority "${1}")
+
+  local CURRENT_LOG_LEVEL=$(_log_level_priority "${LOG_LEVEL}")
+  local MESSAGE_LOG_LEVEL=$(_log_level_priority "${1}")
   if [ ${MESSAGE_LOG_LEVEL} -le ${CURRENT_LOG_LEVEL} ]
   then
-    echo "[${1}] ${2}" >> "${MAIN_DIR}/report.log"
+    local CLEANED_MESSAGE=$(printf "%s" "${2}" | sed -E 's/(\x1B|\033)\[[0-9;]*[mK]//g' | sed -E 's/\\e\[[0-9;]*[a-zA-Z]//g')
+    echo "[${1}] ${CLEANED_MESSAGE}" >> "${MAIN_DIR}/report.log"
   fi
 }
 
@@ -126,7 +128,7 @@ log_debug()
 # usage: echo_ok [message](str)
 echo_ok()
 {
-	if [ -n "$1" ]
+	if [ -n "${1}" ]
 	then
 	  log_info "${1}"
 		echo -e "${FCGREEN}${1} ${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
@@ -363,4 +365,30 @@ run()
 	else
 		echo_ko "(`diff_timestamp ${TIMESTAMP} 1`)"
 	fi
+}
+
+#############
+# DOWNLOADS #
+#############
+
+# usage: download <source>(string) <destination>(string) [override](any)
+download()
+{
+	check_arguments $# 2 "download <source>(string) <destination>(string) [override](any)"
+
+ if [ -f "${2}" ] && [ -r "${2}" ] && [ -z "${3}" ]
+  then
+    echo_info "`livecd_iso` in `download_dir` already exists, ignore download."
+    return 0
+  fi
+
+  if [ -n "${3}" ]
+  then
+    echo_debug "Override enabled"
+    echo_warn "Remove ${FBOLD}${2}${FBOLD_OFF}"
+    rm -f ${2}
+  fi
+
+  echo_info "Downloading ${FBOLD}${1}${FBOLD_OFF} to ${FBOLD}${2}${FBOLD_OFF}..."
+  wget -q --show-progress -O ${2} ${1}
 }

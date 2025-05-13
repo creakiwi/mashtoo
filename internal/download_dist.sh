@@ -10,10 +10,17 @@ download_dist() {
 
     if command -v download_dist_${DIST} >/dev/null 2>&1
     then
-      echo_ok "Entering '$DIST' distribution process..."
+      echo_ok "Entering '${DIST}' distribution process"
       download_dist_${DIST}
+      if command -v checksum_dist_${DIST} >/dev/null 2>&1
+      then
+        echo_ok "Entering '${DIST}' checksum process"
+        checksum_dist_${DIST}
+      else
+        echo_warn "No '${FBOLD}checksum_dist_${DIST}${FBOLD_OFF}' function found in \"${DIST_FILE}\", you ${FBOLD}REALLY${FBOLD_OFF} should implement it."
+      fi
     else
-      echo_warn "Distribution\"${DIST}\" should be handled but no 'download_dist_${DIST}' function found in \"${DIST_FILE}\"."
+      echo_warn "Distribution\"${DIST}\" should be handled but no '${FBOLD}download_dist_${DIST}${FBOLD_OFF}' function found in \"${DIST_FILE}\"."
       exit 1
     fi
   else

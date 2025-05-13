@@ -23,13 +23,10 @@ download_dist_gentoo() {
       ;;
   esac
 
-  echo_warn "Ignore version '${VERSION}' for gentoo, always use 'latest'"
-  VERSION="latest"
-
-  if [ -f `livecd_iso_path` ] && [ -r `livecd_iso_path` ]
+  if [ ${VERSION} != 'latest' ]
   then
-    echo_info "`livecd_iso` in `download_dir` already exists, ignore download."
-    return 0
+    echo_warn "Ignore version '${VERSION}' for '${FBOLD}${DIST}${FBOLD_OFF}', always use 'latest'"
+    VERSION="latest"
   fi
 
   local BASE_URL="https://gentoo.osuosl.org/releases/${DEFINED_ARCH}/autobuilds/"
@@ -42,6 +39,5 @@ download_dist_gentoo() {
   fi
   local ISO_URL=$(wget -q -O - "${GPG_ISO_URL}" | grep -oE '[0-9]{8}T[0-9]{6}Z/.*\.iso')
   local ISO_URL_PATH="${BASE_URL}${ISO_URL}"
-  echo_info "Downloading ${ISO_URL_PATH}..."
-  wget -O `livecd_iso_path` ${ISO_URL_PATH}
+  download "${ISO_URL_PATH}" "`livecd_iso_path`" 1
 }

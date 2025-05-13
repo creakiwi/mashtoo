@@ -35,7 +35,8 @@ ENV LOG_LEVEL=${LOG_LEVEL:-ALL}
 RUN apk --no-cache add \
     fontconfig \
     musl-locales \
-    musl-locales-lang
+    musl-locales-lang \
+    wget
 
 # Filesystems
 RUN apk --no-cache add \
