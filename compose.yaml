@@ -10,7 +10,7 @@ services:
                 NETINST: ${NETINST:-0}
                 SYSINIT: ${SYSINIT:-systemd}
                 LOG_LEVEL: ${LOG_LEVEL:-ALL}
-
+                USB_DEVICE: ${USB_DEVICE:-}
         container_name: mashtoo
         environment:
             - ARCH=${ARCH:-amd64}
@@ -20,12 +20,12 @@ services:
             - NETINST=${NETINST:-0}
             - SYSINIT=${SYSINIT:-systemd}
             - LOG_LEVEL=${LOG_LEVEL:-ALL}
-#            - SUFFIX=${SUFFIX}
-#            - USB_DEVICE=${USB_DEVICE}
-#        privileged: true
-#        devices:
-#            - /dev:/dev
+            - USB_DEVICE=${USB_DEVICE:-}
+        privileged: true
+        devices:
+            - /dev:/dev
         volumes:
+            - /dev:/dev
             - ./:/home/mashtoo
 
 #networks:

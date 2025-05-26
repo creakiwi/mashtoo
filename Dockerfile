@@ -15,6 +15,7 @@ ARG VERSION
 ARG NETINST
 ARG SYSINIT
 ARG LOG_LEVEL
+ARG USB_DEVICE
 
 ENV LANG en_US.UTF-8
 ENV LC_CTYPE en_US.UTF-8
@@ -26,14 +27,14 @@ ENV VERSION=${VERSION:-latest}
 ENV NETINST=${NETINST:-0}
 ENV SYSINIT=${SYSINIT:-systemd}
 ENV LOG_LEVEL=${LOG_LEVEL:-ALL}
+ENV USB_DEVICE=${USB_DEVICE:-}
 #ENV SUFFIX=${SUFFIX}
 #ENV SIGNING_KEY=${SIGNING_KEY}
-#ENV USB_DEVICE=${USB_DEVICE}
-#ENV DIST="https://ftp-osl.osuosl.org/pub/gentoo/releases/${ARCH}/autobuilds"
 
 # Common
 RUN apk --no-cache add \
     fontconfig \
+    gnupg \
     musl-locales \
     musl-locales-lang \
     wget
@@ -47,7 +48,10 @@ RUN apk --no-cache add \
     f2fs-tools \
     hfsprogs \
     jfsutils \
+    lsblk \
     ntfs-3g \
+    sgdisk \
+    wipefs \
     xfsprogs
 
 #RUN echo "arch: ${ARCH}, microarch: ${MICROARCH}, dist: ${DIST}, version: ${VERSION}, netinst: ${NETINST}"
@@ -56,4 +60,5 @@ COPY ./ /home/mashtoo/
 RUN chmod +x /home/mashtoo/mashtoo.sh
 WORKDIR /home/mashtoo
 
-ENTRYPOINT ["/bin/sh", "/home/mashtoo/mashtoo.sh"]
+#ENTRYPOINT ["/bin/sh", "/home/mashtoo/mashtoo.sh"]
+ENTRYPOINT ["tail", "-f", "/dev/null"]

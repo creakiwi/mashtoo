@@ -19,7 +19,7 @@ download_dist_gentoo() {
       then
         echo_warn "Arch '${ARCH}' does not have install CD"
       fi
-      exit_error 1 "Unsupported arch '${ARCH}'"
+      exit_error "Unsupported arch '${ARCH}'"
       ;;
   esac
 
@@ -39,5 +39,29 @@ download_dist_gentoo() {
   fi
   local ISO_URL=$(wget -q -O - "${GPG_ISO_URL}" | grep -oE '[0-9]{8}T[0-9]{6}Z/.*\.iso')
   local ISO_URL_PATH="${BASE_URL}${ISO_URL}"
-  download "${ISO_URL_PATH}" "`livecd_iso_path`" 1
+  download "${ISO_URL_PATH}" "`livecd_iso_path`"
+  download "${ISO_URL_PATH}.sha256" "`livecd_iso_path`.sha256"
+  download "${ISO_URL_PATH}.asc" "`livecd_iso_path`.asc"
+  echo_ok "Downloaded needed files"
+}
+
+checksum_dist_gentoo() {
+  if [ 1 == 1 ]
+  then
+    echo_warn "Currently does not verify gpg keys as files are downloaded from trusted source."
+  else
+    gpg --keyserver hkps://keys.gentoo.org --recv-keys 13EBBDBEDE7A12775DFDB1BABB572E0E2D182910
+    gpg --verify "`livecd_iso_path`.asc"
+  fi
+
+  VERIFIED_SHA256=$(checksum_extract_from_file "SHA256" "`livecd_iso_path`.sha256")
+  COMPUTED_SHA256=$(checksum_extract_from_string "sha256" "$(sha256sum "`livecd_iso_path`")")
+  echo_info "Verified checksum: ${FBOLD}${VERIFIED_SHA256}${FBOLD_OFF}"
+  echo_info "Computed checksum: ${FBOLD}${COMPUTED_SHA256}${FBOLD_OFF}"
+  if [ "${VERIFIED_SHA256}" == "${COMPUTED_SHA256}" ]
+  then
+    echo_ok "Checksums matches"
+  else
+    exit_error "Checksums does not match"
+  fi
 }
