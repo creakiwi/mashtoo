@@ -12,4 +12,10 @@ summary() {
   else
       echo -e "Netinstall mode: ${FCYELLOW}no${FCDEF}"
   fi
+  if [ "${DEBUG}" = "1" ]
+  then
+    echo_info "Debug is enabled (questions will be asked)"
+  else
+    echo_warn "Debug is disabled (no questions will be asked)"
+  fi
 }

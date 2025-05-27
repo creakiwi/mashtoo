@@ -11,6 +11,7 @@ services:
                 SYSINIT: ${SYSINIT:-systemd}
                 LOG_LEVEL: ${LOG_LEVEL:-ALL}
                 USB_DEVICE: ${USB_DEVICE:-}
+                DEBUG: ${DEBUG:-1}
         container_name: mashtoo
         environment:
             - ARCH=${ARCH:-amd64}
@@ -21,6 +22,7 @@ services:
             - SYSINIT=${SYSINIT:-systemd}
             - LOG_LEVEL=${LOG_LEVEL:-ALL}
             - USB_DEVICE=${USB_DEVICE:-}
+            - DEBUG=${DEBUG:-1}
         privileged: true
         devices:
             - /dev:/dev
