@@ -48,11 +48,16 @@ RUN apk --no-cache add \
     e2fsprogs \
     exfatprogs \
     f2fs-tools \
+    grub \
+    grub-bios \
+    grub-efi \
     hfsprogs \
     jfsutils \
+    libarchive-tools \
     lsblk \
     ntfs-3g \
-    sgdisk \
+    p7zip \
+    util-linux \
     wipefs \
     xfsprogs
 

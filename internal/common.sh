@@ -14,7 +14,7 @@ exit_llama() {
   exit 42
 }
 
-# usage: exit_error [error_msg](string) [error_code](int)
+# usage: exit_error [error_msg](string) [error_code](integer)
 exit_error() {
 	if [ "${#}" -eq 1 ]
 	then
@@ -29,7 +29,7 @@ exit_error() {
   exit 1
 }
 
-# usage: exit_warn [warn_code](int) [warn_msg](str)
+# usage: exit_warn [warn_code](integer) [warn_msg](string)
 exit_warn() {
 	if [ ${#} -eq 2 ]
 	then
@@ -49,9 +49,9 @@ exit_success() {
 	exit 0
 }
 
-#usage: equals_or_exit <given>(int|str) <expected>(int|str)
+# usage: equals_or_exit <given>(integer|string) <expected>(integer|string)
 equals_or_exit() {
-	check_arguments ${#} 2 "<given>(int|str) <expected>(int|str)"
+	check_arguments ${#} 2 "<given>(integer|string) <expected>(integer|string)"
 	local GIVEN=${1}
 	local EXPECTED=${2}
 
@@ -74,23 +74,24 @@ equals_or_exit() {
 # LOGGER #
 ##########
 
-# usage: _log_level_priority <level>(str)
+# usage: _log_level_priority <level>(string)
 _log_level_priority() {
-	check_arguments $# 1 "_log_level_priority <level>(str)"
+	check_arguments $# 1 "_log_level_priority <level>(string)"
   case "$1" in
     ERROR) echo 1 ;;
     WARN)  echo 2 ;;
     INFO)  echo 3 ;;
     DEBUG) echo 4 ;;
     ALL)   echo 5 ;;
-    LLAMA) echo 7 ;;
+    TODO)  echo 6 ;; # Unwanted for ALL because its for dev purpose only
+    LLAMA) echo 7 ;; # Do we need to log easter eggs in ALL ? Nope
     *)     echo 99 ;;
   esac
 }
 
-# usage: log <level>(str) <message>(str)
+# usage: log <level>(string) <message>(string)
 log() {
-  check_arguments $# 2 "log <level>(str) <message>(str)"
+  check_arguments $# 2 "log <level>(string) <message>(string)"
 
   local CURRENT_LOG_LEVEL=$(_log_level_priority "${LOG_LEVEL}")
   local MESSAGE_LOG_LEVEL=$(_log_level_priority "${1}")
@@ -101,32 +102,52 @@ log() {
   fi
 }
 
-# usage: log_info <message>(str)
+# usage: log_info <message>(string)
 log_info() {
-	check_arguments $# 1 "log_info <message>(str)"
+	check_arguments $# 1 "log_info <message>(string)"
+	local MESSAGE="${1}"
 
-  log "INFO" "${1}"
+  log "INFO" "${MESSAGE}"
 }
 
-# usage: log_error <message>(str)
+# usage: log_error <message>(string)
 log_error() {
-	check_arguments $# 1 "log_error <message>(str)"
+	check_arguments $# 1 "log_error <message>(string)"
+	local MESSAGE="${1}"
 
-  log "ERROR" "${1}"
+  log "ERROR" "${MESSAGE}"
 }
 
-# usage: log_warn <message>(str)
+# usage: log_warn <message>(string)
 log_warn() {
-	check_arguments $# 1 "log_warn <message>(str)"
+	check_arguments $# 1 "log_warn <message>(string)"
+	local MESSAGE="${1}"
 
-  log "WARN" "${1}"
+  log "WARN" "${MESSAGE}"
 }
 
-# usage: log_debug <message>(str)
+# usage: log_debug <message>(string)
 log_debug() {
-	check_arguments $# 1 "log_debug <message>(str)"
+	check_arguments $# 1 "log_debug <message>(string)"
+	local MESSAGE="${1}"
 
-  log "DEBUG" "${1}"
+  log "DEBUG" "${MESSAGE}"
+}
+
+# usage: log_todo <message>(string)
+log_todo() {
+	check_arguments $# 1 "log_todo <message>(string)"
+	local MESSAGE="${1}"
+
+  log "TODO" "${MESSAGE}"
+}
+
+# usage: log_llama <message>(string)
+log_llama() {
+	check_arguments $# 1 "log_llama <message>(string)"
+	local MESSAGE="${1}"
+
+  log "LLAMA" "${MESSAGE}"
 }
 
 ################
@@ -134,15 +155,16 @@ log_debug() {
 ################
 # usage: echo_llama <message>(string)
 echo_llama() {
-	check_arguments $# 1 "<message>(string)"
-  local CLEANED_MESSAGE=$(printf "%s" "${1}" | sed -E 's/(\x1B|\033)\[[0-9;]*[mK]//g' | sed -E 's/\\e\[[0-9;]*[a-zA-Z]//g')
+	check_arguments $# 1 "echo_llama <message>(string)"
+	local MESSAGE="${1}"
+  local CLEANED_MESSAGE=$(printf "%s" "${MESSAGE}" | sed -E 's/(\x1B|\033)\[[0-9;]*[mK]//g' | sed -E 's/\\e\[[0-9;]*[a-zA-Z]//g')
 
-	log "LLAMA" "${1}"
+	log_llama "${MESSAGE}"
+	echo_todo "Use llama_colors in echo_llama"
 	local COLORS="31 33 32 36 34 35 91"
-#	echo -e "${FCPINK}${1}${FCDEF}"
   local i=0
   while [ $i -lt ${#CLEANED_MESSAGE} ]; do
-    local CHAR=$(printf "%s" "${1}" | cut -c $((i+1)))
+    local CHAR=$(printf "%s" "${MESSAGE}" | cut -c $((i+1)))
     local COLOR=$(echo ${COLORS} | cut -d' ' -f $(( (i % 7) + 1 )))
     printf "\033[${COLOR}m%s\033[0m" "${CHAR}"
     i=$((i + 1))
@@ -150,42 +172,54 @@ echo_llama() {
   echo
 }
 
-# usage: echo_ok [message](str)
+# usage: echo_ok [message](string)
 echo_ok() {
 	if [ -n "${1}" ]
 	then
-	  log_info "${1}"
-		echo -e "${FCGREEN}${1} ${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
+	local MESSAGE="${1}"
+
+	  log_info "${MESSAGE}"
+		echo -e "${FCGREEN}${MESSAGE} ${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
 	else
 		echo -e "${FCGREEN}${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
 	fi
 }
 
-# usage: echo_info <message>(str)
+# usage: echo_info <message>(string)
 echo_info() {
-	check_arguments $# 1 "echo_info <message>(str)"
+	check_arguments $# 1 "echo_info <message>(string)"
+	local MESSAGE="${1}"
 
-  log_info "${1}"
-  echo -e "${FCBLUE}${FBOLD}[*]${FBOLD_OFF} ${1}${FCDEF}"
+  log_info "${MESSAGE}"
+  echo -e "${FCBLUE}${FBOLD}[*]${FBOLD_OFF} ${MESSAGE}${FCDEF}"
 }
 
-# usage: echo_debug <message>(str)
+# usage: echo_debug <message>(string)
 echo_debug() {
-	check_arguments $# 1 "echo_debug <message>(str)"
+	check_arguments $# 1 "echo_debug <message>(string)"
+	local MESSAGE="${1}"
 
-  log_debug "${1}"
-  echo -e "${FCMAGENTA}${FBOLD}[#]${FBOLD_OFF} ${1}${FCDEF}"
+  log_debug "${MESSAGE}"
+  echo -e "${FCMAGENTA}${FBOLD}[#]${FBOLD_OFF} ${MESSAGE}${FCDEF}"
 }
 
-# usage: echo_warn <message>(str)
+echo_todo() {
+	check_arguments $# 1 "echo_debug <message>(string)"
+	local MESSAGE="${1}"
+
+  log_todo "${MESSAGE}"
+  echo -e "${FCMAGENTA}${FBOLD}${FBLINK}[@] TODO${FBLINK_OFF}${FBOLD_OFF} ${MESSAGE}${FCDEF}"
+}
+
+# usage: echo_warn <message>(string)
 echo_warn() {
-	check_arguments $# 1 "echo_warn <message>(str)"
+	check_arguments $# 1 "echo_warn <message>(string)"
 
   log_warn "${1}"
   echo -e "${FCYELLOW}${FBOLD}[!️]${FBOLD_OFF} ${1}${FCDEF}"
 }
 
-# usage: echo_ko [message](str)
+# usage: echo_ko [message](string)
 echo_ko() {
 	if [ -n "$1" ]
 	then
@@ -196,9 +230,9 @@ echo_ko() {
 	fi
 }
 
-# usage: repeat <character>(int|str|chr) <number of times>(int)
+# usage: repeat <character>(integer|string|chr) <number of times>(integer)
 repeat() {
-	check_arguments $# 2 "repeat <character>(int|str|chr) <number of times>(int)"
+	check_arguments $# 2 "repeat <character>(integer|string|chr) <number of times>(integer)"
 
 	local start=1
 	local end=${1:-80}
@@ -210,12 +244,12 @@ repeat() {
 	done
 }
 
-# usage: title <title>(str)
+# usage: title <title>(string)
 title() {
-	check_arguments $# 1 "title <title>(str)"
-
+	check_arguments $# 1 "title <title>(string)"
 	local SEPARATORS=$((${#1}+4))
 	local TITLE="# ${1} #"
+
 	echo ""
 	repeat ${SEPARATORS} "#"
 	echo ""
@@ -225,9 +259,9 @@ title() {
 	echo ""
 }
 
-# usage: obfuscate <string>(str)
+# usage: obfuscate <string>(string)
 obfuscate() {
-	check_arguments $# 1 "obfuscate <string>(str)"
+	check_arguments $# 1 "obfuscate <string>(string)"
 	PASSWORD=${1}
 	LENGTH=$((${#PASSWORD}-2))
 	FIRST_CHAR=`echo ${PASSWORD} | sed -E 's/^(.{1}).*$/\1/'`
@@ -238,9 +272,9 @@ obfuscate() {
 	echo ${OBFUSCATED}
 }
 
-# usage: ask_expected <prompt>(str) <expected>(any) [default_value](str)
+# usage: ask_expected <prompt>(string) <expected>(any) [default_value](string)
 ask_expected() {
-	check_arguments $# 2 "ask_expected <expected>(any) <prompt>(str) [default_value](str)"
+	check_arguments $# 2 "ask_expected <expected>(any) <prompt>(string) [default_value](string)"
 	EXPECTED="${1}"
 	shift
 	ANSWER=`ask "$@"`
@@ -252,9 +286,9 @@ ask_expected() {
   echo 0
 }
 
-# usage: ask <prompt>(str) [default_value](str)
+# usage: ask <prompt>(string) [default_value](string)
 ask() {
-	check_arguments $# 1 "ask <prompt>(str) [default_value](str)"
+	check_arguments $# 1 "ask <prompt>(string) [default_value](string)"
 	DEFAULT="none"
 	if [ -n "${2}" ]
 	then
@@ -269,9 +303,9 @@ ask() {
 	echo ${ASK}
 }
 
-# usage: ask_hidden <prompt>(str) [default_value](str)
+# usage: ask_hidden <prompt>(string) [default_value](string)
 ask_hidden() {
-	check_arguments $# 1 "ask_hidden <prompt>(str) [default_value](str)"
+	check_arguments $# 1 "ask_hidden <prompt>(string) [default_value](string)"
 	DEFAULT="none"
 	if [ -n ${2} ]
 	then
@@ -295,23 +329,23 @@ timestamp() {
 	echo `date +%s`
 }
 
-# usage: diff_timestamp <timestamp>(int) [human_readable](any)
+# usage: diff_timestamp <timestamp>(integer) [human_readable](any)
 diff_timestamp() {
-	check_arguments $# 1 "diff_timestamp <timestamp>(int)"
+	check_arguments $# 1 "diff_timestamp <timestamp>(integer)"
 
 	CURRENT=`timestamp`
 	DIFF=$((${CURRENT} - ${1}))
 	if [ -n ${2} ]
 	then
-		echo `readabie_time ${DIFF}`
+		echo `readable_time ${DIFF}`
 	else
 		echo ${DIFF}
 	fi
 }
 
-# usage: readabie_time <timestamp>(int)
-readabie_time() {
-	check_arguments $# 1 "readabie_time <timestamp>(int)"
+# usage: readable_time <timestamp>(integer)
+readable_time() {
+	check_arguments $# 1 "readable_time <timestamp>(integer)"
 	local DIFF=$1
 	local DAYS=$(($DIFF/60/60/24))
 	local HOURS=$(($DIFF/60/60%24))
@@ -345,12 +379,12 @@ readabie_time() {
 # OTHERS #
 ##########
 
-# usage: check_arguments <passed_parameters>(int) <needed_parameters>(int) [usage](str)
+# usage: check_arguments <passed_parameters>(integer) <needed_parameters>(integer) [usage](string)
 check_arguments() {
 	if [ $# -lt 2 ]
 	then
 		echo "check_arguments require at least two parameters"
-		echo "usage: check_arguments <passed_parameters>(int) <needed_parameters>(int) [usage](str)"
+		echo "usage: check_arguments <passed_parameters>(integer) <needed_parameters>(integer) [usage](string)"
 		exit 1
 	fi
 
@@ -378,6 +412,7 @@ run_quiet() {
 }
 
 run() {
+	TIMESTAMP=`timestamp`
 	COMMAND=$@
 	echo -e -n "Running \"${FCBLUE}$@${FCDEF}\"..."
 	eval "${COMMAND}"
@@ -392,42 +427,45 @@ run() {
 # DOWNLOADS #
 #############
 
-# usage: download <source>(string) <destination>(string) [override](any)
+# usage: download <source>(string) <destination>(string) [override](bool)
 download() {
 	check_arguments $# 2 "download <source>(string) <destination>(string) [override](any)"
+	local SOURCE=${1}
+	local DESTINATION=${2}
+	local OVERRIDE=${3}
 
- if [ -f "${2}" ] && [ -r "${2}" ] && [ -z "${3}" ]
+ if [ -f "${DESTINATION}" ] && [ -r "${DESTINATION}" ] && [ -z "${OVERRIDE}" ]
   then
-    echo_info "${2} in `download_dir` already exists, ignore download."
+    echo_info "${FBOLD}${DESTINATION}${FBOLD_OFF} in ${FBOLD}`download_dir`${FBOLD_OFF} already exists, ignore download."
     return 0
   fi
 
-  if [ -n "${3}" ]
+  if [ -n "${OVERRIDE}" ] && [ "${OVERRIDE}" = 1 ]
   then
     echo_debug "Override enabled"
-    echo_warn "Remove ${FBOLD}${2}${FBOLD_OFF}"
-    rm -f ${2}
+    echo_warn "Remove ${FBOLD}${DESTINATION}${FBOLD_OFF}"
+    run "rm -f ${DESTINATION}"
   fi
 
-  echo_info "Downloading ${FBOLD}${1}${FBOLD_OFF} to ${FBOLD}${2}${FBOLD_OFF}..."
-  wget -q --show-progress -O ${2} ${1}
+  echo_info "Downloading ${FBOLD}${SOURCE}${FBOLD_OFF} to ${FBOLD}${DESTINATION}${FBOLD_OFF}..."
+  run "wget -q --show-progress -O ${DESTINATION} ${SOURCE}"
 }
 
 #############
 # CHECKSUMS #
 #############
-# usage: checksum_extract_from_file <type>(str) <file>(str)
+# usage: checksum_extract_from_file <type>(string) <file>(string)
 checksum_extract_from_file() {
-	check_arguments $# 2 "checksum_extract_from_file <type>(str) <file>(str)"
+	check_arguments $# 2 "checksum_extract_from_file <type>(string) <file>(string)"
 
   local CONTENT=$(cat ${2})
   local CHECKSUM=$(checksum_extract_from_string "${1}" "${CONTENT}")
   echo "${CHECKSUM}"
 }
 
-# usage: checksum_extract_from_file <type>(str) <string>(str)
+# usage: checksum_extract_from_file <type>(string) <string>(string)
 checksum_extract_from_string() {
-	check_arguments $# 2 "checksum_extract_from_file <type>(str) <string>(str)"
+	check_arguments $# 2 "checksum_extract_from_file <type>(string) <string>(string)"
 
   case ${1} in
     sha256|SHA256)

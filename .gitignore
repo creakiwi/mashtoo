@@ -4,3 +4,7 @@ downloads/*
 !downloads/.gitkeep
 mnt/livecd/*
 !mnt/livecd/.gitkeep
+mnt/sda2/*
+!mnt/sda2/.gitkeep
+mnt/initrd/*
+!mn/initrd/.gitkeep

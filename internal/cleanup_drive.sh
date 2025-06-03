@@ -3,8 +3,12 @@
 cleanup_drive() {
   title "Cleanup drive"
   _check_disk
-  _erase_disk
-#  clean_random ${USB_DEVICE}
+  if [ "${DEBUG}" = "1" ]
+  then
+    _erase_disk
+  fi
+
+  wipe_drive ${USB_DEVICE}
 }
 
 _check_disk()

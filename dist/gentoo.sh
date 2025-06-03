@@ -62,6 +62,7 @@ checksum_dist_gentoo() {
   then
     echo_ok "Checksums matches"
   else
+    echo_warn "Maybe cleanup $(download_dir) ?"
     exit_error "Checksums does not match"
   fi
 }
