@@ -1,9 +1,7 @@
 #!/bin/sh
 
 copy_files_to_initramfs() {
-  local CUSTOM_LIVECD_PATH="$(custom_dir)/initramfs/*"
-
-  run "cp -R ${CUSTOM_LIVECD_PATH} ${INITRAMFS_EXTRACT_POINT}/"
+  run "cp -R $(custom_dir)/initramfs/. ${INITRAMFS_EXTRACT_POINT}/"
 }
 
 

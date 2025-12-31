@@ -58,6 +58,7 @@ RUN apk --no-cache add \
     libarchive-tools \
     lsblk \
     ntfs-3g \
+    openssh \
     p7zip \
     squashfs-tools \
     util-linux \

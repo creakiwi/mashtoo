@@ -1,0 +1,4 @@
+#!/bin/sh
+rc-service net.* start || true
+ssh-keygen -A -f /etc
+rc-service sshd restart || true

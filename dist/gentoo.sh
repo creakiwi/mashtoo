@@ -43,9 +43,14 @@ download_dist_gentoo() {
   fi
   local ISO_URL=$(wget -q -O - "${GPG_ISO_URL}" | grep -oE '[0-9]{8}T[0-9]{6}Z/.*\.iso')
   local ISO_URL_PATH="${BASE_URL}${ISO_URL}"
-  download "${ISO_URL_PATH}" "`livecd_iso_path`"
-  download "${ISO_URL_PATH}.sha256" "`livecd_iso_path`.sha256"
-  download "${ISO_URL_PATH}.asc" "`livecd_iso_path`.asc"
+  if [ -f `livecd_iso_path` ]
+  then
+    echo "already downloaded"
+  else
+    download "${ISO_URL_PATH}" "`livecd_iso_path`"
+    download "${ISO_URL_PATH}.sha256" "`livecd_iso_path`.sha256"
+    download "${ISO_URL_PATH}.asc" "`livecd_iso_path`.asc"
+  fi
   echo_ok "Downloaded needed files"
 }
 

@@ -197,8 +197,8 @@ repack_iso_xorriso_from_report() {
     exit_error "Report file not found: ${REPORT_FILE}"
   fi
 
-  CMD="xorriso -as mkisofs $(cat "${REPORT_FILE}") \"${EXTRACT_DIR}\" -o \"${OUTPUT_ISO}\""
-  echo ${CMD}
+  REPORT_CONTENT=$(tr '\n' ' ' < "$REPORT_FILE")
+  run "xorriso -as mkisofs ${REPORT_CONTENT} -o ${OUTPUT_ISO} ${EXTRACT_DIR}"
 }
 
 iso_to_device() {
