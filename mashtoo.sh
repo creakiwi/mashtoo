@@ -1,12 +1,12 @@
 #!/bin/sh
 
-MAIN_DIR=$(cd "$(dirname "$0")" && pwd)
+if [ -z ${MASHTOO_DIR} ]
+then
+  echo "You must define MASHTOO_DIR variable (ex: MASHTOO_DIR=\"/home/alexception/mashtoo\")"
+  exit
+fi
 
-. ./internal/includes.sh
+#MAIN_DIR=$(cd "$(dirname "$0")" && pwd)
 
-summary
-check_dependencies
-download_dist
-cleanup_drive
-#create_bootable_drive
-handle_livecd
+. ${MASHTOO_DIR}/internal/includes.sh
+

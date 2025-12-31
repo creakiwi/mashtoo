@@ -39,6 +39,7 @@ RUN apk --no-cache add \
     gnupg \
     musl-locales \
     musl-locales-lang \
+    syslinux \
     wget
 
 # Filesystems
@@ -48,6 +49,7 @@ RUN apk --no-cache add \
     e2fsprogs \
     exfatprogs \
     f2fs-tools \
+    file \
     grub \
     grub-bios \
     grub-efi \
@@ -57,9 +59,11 @@ RUN apk --no-cache add \
     lsblk \
     ntfs-3g \
     p7zip \
+    squashfs-tools \
     util-linux \
     wipefs \
-    xfsprogs
+    xfsprogs \
+    xorriso
 
 #RUN echo "arch: ${ARCH}, microarch: ${MICROARCH}, dist: ${DIST}, version: ${VERSION}, netinst: ${NETINST}"
 RUN mkdir -p /home/mashtoo

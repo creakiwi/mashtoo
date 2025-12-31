@@ -306,7 +306,7 @@ ask() {
 # usage: ask_hidden <prompt>(string) [default_value](string)
 ask_hidden() {
 	check_arguments $# 1 "ask_hidden <prompt>(string) [default_value](string)"
-	DEFAULT="none"
+	local DEFAULT="none"
 	if [ -n ${2} ]
 	then
 		DEFAULT=`obfuscate ${2}`
@@ -332,9 +332,10 @@ timestamp() {
 # usage: diff_timestamp <timestamp>(integer) [human_readable](any)
 diff_timestamp() {
 	check_arguments $# 1 "diff_timestamp <timestamp>(integer)"
+	local TIMESTAMP=${1}
 
-	CURRENT=`timestamp`
-	DIFF=$((${CURRENT} - ${1}))
+	local CURRENT=`timestamp`
+	local DIFF=$((${CURRENT} - ${TIMESTAMP}))
 	if [ -n ${2} ]
 	then
 		echo `readable_time ${DIFF}`
@@ -352,7 +353,7 @@ readable_time() {
 	local MINUTS=$(($DIFF/60%60))
 	local SECONDS=$(($DIFF%60))
 
-	READABLE=""
+	local READABLE=""
 	if [ ${SECONDS} -ge 0 ]
 	then
 		READABLE=`printf "%02d" ${SECONDS}`
@@ -399,9 +400,11 @@ check_arguments() {
 	fi
 }
 
+# usage: run_quiet ...<any>
 run_quiet() {
-	TIMESTAMP=`timestamp`
-	COMMAND=$@
+	local TIMESTAMP=`timestamp`
+	local COMMAND=$@
+
 	echo -e -n "Running \"${FCBLUE}$@${FCDEF}\"..."
 	eval "${COMMAND}" > /dev/null 2>&1
 	if [ $? -eq 0 ]; then
@@ -411,9 +414,11 @@ run_quiet() {
 	fi
 }
 
+# usage: run ...<any>
 run() {
-	TIMESTAMP=`timestamp`
-	COMMAND=$@
+	local TIMESTAMP=`timestamp`
+	local COMMAND=$@
+
 	echo -e -n "Running \"${FCBLUE}$@${FCDEF}\"..."
 	eval "${COMMAND}"
 	if [ $? -eq 0 ]; then

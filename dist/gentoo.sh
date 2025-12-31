@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# required download_dist_{distribution}(void): exit on error
+# required extract_initramfs_{distribution(void): exit_on_error
+# optional abstract checksum_dist_{gentoo}(void): exit on error
+
 download_dist_gentoo() {
   case ${ARCH} in
     # CPU 64
@@ -55,7 +59,7 @@ checksum_dist_gentoo() {
   fi
 
   VERIFIED_SHA256=$(checksum_extract_from_file "SHA256" "`livecd_iso_path`.sha256")
-  COMPUTED_SHA256=$(checksum_extract_from_string "sha256" "$(sha256sum "`livecd_iso_path`")")
+  COMPUTED_SHA256=$(checksum_extract_from_string "SHA256" "$(sha256sum "`livecd_iso_path`")")
   echo_info "Verified checksum: ${FBOLD}${VERIFIED_SHA256}${FBOLD_OFF}"
   echo_info "Computed checksum: ${FBOLD}${COMPUTED_SHA256}${FBOLD_OFF}"
   if [ "${VERIFIED_SHA256}" == "${COMPUTED_SHA256}" ]
@@ -65,4 +69,17 @@ checksum_dist_gentoo() {
     echo_warn "Maybe cleanup $(download_dir) ?"
     exit_error "Checksums does not match"
   fi
+}
+
+extract_initramfs_gentoo() {
+  local INITRAMFS_SQUASH_FILE="${LIVECD_EXTRACT_POINT}/image.squashfs"
+
+  extract_squashfs "${INITRAMFS_SQUASH_FILE}" "${INITRAMFS_EXTRACT_POINT}"
+}
+
+repack_initramfs_gentoo() {
+  local INITRAMFS_SQUASH_FILE="${LIVECD_EXTRACT_POINT}/image.squashfs"
+
+  echo_todo "Assuming XZ compression, verify compression with unsquashfs -s ${INITRAMFS_SQUASH_FILE}"
+  repack_squashfs "${INITRAMFS_EXTRACT_POINT}" "${INITRAMFS_SQUASH_FILE}" "-comp xz -noappend"
 }

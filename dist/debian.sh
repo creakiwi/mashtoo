@@ -43,3 +43,18 @@ download_dist_debian()
   local ISO_URL_PATH="${BASE_URL}${ISO_URL}"
   download "${ISO_URL_PATH}" "`livecd_iso_path`"
 }
+
+extract_initramfs_debian() {
+  local INITRD_FILE="${LIVECD_EXTRACT_POINT}/install.amd/initrd.gz"
+
+  cd ${INITRAMFS_EXTRACT_POINT}
+  run "zcat ${INITRD_FILE} | cpio -imdv"
+  cd -
+}
+
+repack_initramfs_debian() {
+  local INITRD_FILE="${LIVECD_EXTRACT_POINT}/install.amd/initrd.gz"
+
+  cd ${INITRAMFS_EXTRACT_POINT}
+  run "find . | cpio -o -H newc | gzip -9 > ${INITRD_FILE}"
+}

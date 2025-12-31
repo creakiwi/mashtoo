@@ -1,10 +1,27 @@
 .idea/
+#logs
 report.log
+
+#downloaded dist
 downloads/*
 !downloads/.gitkeep
+
+#mount points
 mnt/livecd/*
 !mnt/livecd/.gitkeep
 mnt/sda2/*
 !mnt/sda2/.gitkeep
-mnt/initrd/*
-!mn/initrd/.gitkeep
+mnt/initramfs/*
+!mnt/initramfs/.gitkeep
+
+# custom script files
+custom/initramfs/*
+!custom/initramfs/.gitkeep
+
+# tmp dir
+tmp/*
+!tmp/.gitkeep
+
+# secrets directory
+secrets/*
+!secrets/.gitkeep

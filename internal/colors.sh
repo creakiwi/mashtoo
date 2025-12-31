@@ -46,7 +46,7 @@ llama_colors() {
     i=$((i + 1))
   done
 
-  printf "%b" "${LLAMA_STRING}"
+  printf "%b\n" "${LLAMA_STRING}"
 }
 
 # usage: llama_colors <string>(string)
@@ -87,4 +87,17 @@ nllama_colors() {
   done
 
   printf "%b" "$LLAMA_STRING"
+}
+
+zllama_colors() {
+  STRING="$1"
+  COLORS="31 33 32 36 34 35 91"
+  i=0
+
+  echo "$STRING" | fold -w1 | while IFS= read -r CHAR; do
+    COLOR=$(echo $COLORS | cut -d' ' -f $(( (i % 7) + 1 )))
+    printf "\033[%sm%s\033[0m" "$COLOR" "$CHAR"
+    i=$((i + 1))
+  done
+  printf "\n"
 }

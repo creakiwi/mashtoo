@@ -119,7 +119,16 @@ extract_iso() {
 	local ISO_FILE=${1}
 	local EXTRACT_DIR=${2}
 
-  extract_iso_bsdtar ${ISO_FILE} ${EXTRACT_DIR}
+  extract_iso_xorriso ${ISO_FILE} ${EXTRACT_DIR}
+}
+
+# usage: extract_iso_xorriso <iso_file>(string) <extract_dir>(string)
+extract_iso_xorriso() {
+	check_arguments $# 2 "extract_iso_xorriso <iso_file>(string) <extract_dir>(string)"
+	local ISO_FILE=${1}
+	local EXTRACT_DIR=${2}
+
+  run "xorriso -osirrox on -indev ${ISO_FILE} -extract / ${EXTRACT_DIR}"
 }
 
 # usage: extract_iso_bsdtar: <iso_file>(string) <extract_dir>(string)
@@ -138,4 +147,68 @@ extract_iso_7z() {
 	local EXTRACT_DIR=${2}
 
   run "7z x ${ISO_FILE} -o${EXTRACT_DIR}"
+}
+
+# usage: extract_boot_info <iso_file>(string) <extract_name>(string)
+extract_boot_info() {
+  check_arguments $# 2 "extract_boot_info <iso_file>(string) <extract_name>(string)"
+  local ISO_FILE=${1}
+  local EXTRACT_NAME=${2}
+
+  run "xorriso -indev ${ISO_FILE} -report_el_torito as_mkisofs > ${EXTRACT_NAME}"
+}
+
+# usage: extract_squashfs <squashfs_file>(string) <extract_dir>(string)
+extract_squashfs() {
+  check_arguments $# 2 "extract_squashfs <squashfs_file>(string) <extract_dir>(string)"
+  local SQUASHFS_FILE=${1}
+  local EXTRACT_DIR=${2}
+
+  run "unsquashfs -d ${EXTRACT_DIR} ${SQUASHFS_FILE}"
+}
+
+# usage: repack_squashfs <directory>(string) <squashfs_file>(string) [options](string)
+repack_squashfs() {
+  check_arguments $# 2 "repack_squashfs <directory>(string) <squashfs_file>(string) [options](string)"
+  local DIRECTORY=${1}
+  local SQUASHFS_FILE=${2}
+
+  OPTIONS=""
+  if [ -n "${3}" ]
+  then
+    OPTIONS=" ${3}"
+  fi
+
+  run "mksquashfs ${DIRECTORY} ${SQUASHFS_FILE}${OPTIONS}"
+}
+
+repack_iso() {
+  local var
+}
+
+# usage: repack_iso_xorriso_from_report <report_file>(string) <extract_dir>(string) <output_iso>(string)
+repack_iso_xorriso_from_report() {
+  check_arguments $# 3 "repack_iso_xorriso_from_report <report_file>(string) <extract_dir>(string) <output_iso>(string)"
+  local REPORT_FILE=${1}
+  local EXTRACT_DIR=${2}
+  local OUTPUT_ISO=${3}
+
+  if [ ! -f "${REPORT_FILE}" ]; then
+    exit_error "Report file not found: ${REPORT_FILE}"
+  fi
+
+  CMD="xorriso -as mkisofs $(cat "${REPORT_FILE}") \"${EXTRACT_DIR}\" -o \"${OUTPUT_ISO}\""
+  echo ${CMD}
+}
+
+iso_to_device() {
+  check_arguments $# 2 "iso_to_device <iso_file>(string) <device>(string)"
+  local ISO_FILE=${1}
+  local DEVICE=${2}
+
+  if [ ! -f "${ISO_FILE}" ]; then
+    exit_error "ISO file not found: ${ISO_FILE}"
+  fi
+
+  run "dd if=${ISO_FILE} of=${DEVICE} bs=4096 && sync"
 }

@@ -11,8 +11,7 @@ cleanup_drive() {
   wipe_drive ${USB_DEVICE}
 }
 
-_check_disk()
-{
+_check_disk() {
   if [ `drive_exists ${USB_DEVICE}` -eq 1 ]
   then
     echo_info "Drive ${FBOLD}${USB_DEVICE}${FBOLD_OFF} exists".
