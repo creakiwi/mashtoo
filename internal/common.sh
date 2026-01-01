@@ -98,7 +98,7 @@ log() {
   if [ ${MESSAGE_LOG_LEVEL} -le ${CURRENT_LOG_LEVEL} ]
   then
     local CLEANED_MESSAGE=$(printf "%s" "${2}" | sed -E 's/(\x1B|\033)\[[0-9;]*[mK]//g' | sed -E 's/\\e\[[0-9;]*[a-zA-Z]//g')
-    echo "[${1}] ${CLEANED_MESSAGE}" >> "${MAIN_DIR}/report.log"
+    echo "[${1}] ${CLEANED_MESSAGE}" >> "/tmp/mashtoo.log"
   fi
 }
 
@@ -179,9 +179,9 @@ echo_ok() {
 	local MESSAGE="${1}"
 
 	  log_info "${MESSAGE}"
-		echo -e "${FCGREEN}${MESSAGE} ${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
+		printf "%b\n" "${FCGREEN}${MESSAGE} ${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
 	else
-		echo -e "${FCGREEN}${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
+		printf "%b\n" "${FCGREEN}${FBOLD}[OK]${FBOLD_OFF}${FCDEF}"
 	fi
 }
 
@@ -191,7 +191,7 @@ echo_info() {
 	local MESSAGE="${1}"
 
   log_info "${MESSAGE}"
-  echo -e "${FCBLUE}${FBOLD}[*]${FBOLD_OFF} ${MESSAGE}${FCDEF}"
+  printf "%b\n" "${FCBLUE}${FBOLD}[*]${FBOLD_OFF} ${MESSAGE}${FCDEF}"
 }
 
 # usage: echo_debug <message>(string)
@@ -200,7 +200,7 @@ echo_debug() {
 	local MESSAGE="${1}"
 
   log_debug "${MESSAGE}"
-  echo -e "${FCMAGENTA}${FBOLD}[#]${FBOLD_OFF} ${MESSAGE}${FCDEF}"
+  printf "%b\n" "${FCMAGENTA}${FBOLD}[#]${FBOLD_OFF} ${MESSAGE}${FCDEF}"
 }
 
 echo_todo() {
@@ -208,7 +208,7 @@ echo_todo() {
 	local MESSAGE="${1}"
 
   log_todo "${MESSAGE}"
-  echo -e "${FCMAGENTA}${FBOLD}${FBLINK}[@] TODO${FBLINK_OFF}${FBOLD_OFF} ${MESSAGE}${FCDEF}"
+  printf "%b\n" "${FCMAGENTA}${FBOLD}${FBLINK}[@] TODO${FBLINK_OFF}${FBOLD_OFF} ${MESSAGE}${FCDEF}"
 }
 
 # usage: echo_warn <message>(string)
@@ -216,7 +216,7 @@ echo_warn() {
 	check_arguments $# 1 "echo_warn <message>(string)"
 
   log_warn "${1}"
-  echo -e "${FCYELLOW}${FBOLD}[!️]${FBOLD_OFF} ${1}${FCDEF}"
+  printf "%b\n" "${FCYELLOW}${FBOLD}[!️]${FBOLD_OFF} ${1}${FCDEF}"
 }
 
 # usage: echo_ko [message](string)
@@ -224,9 +224,9 @@ echo_ko() {
 	if [ -n "$1" ]
 	then
 	  log_error "${1}"
-		echo -e "${FCRED}${1} ${FBOLD}[KO]${FBOLD_OFF}${FCDEF}"
+		printf "%b\n" "${FCRED}${1} ${FBOLD}[KO]${FBOLD_OFF}${FCDEF}"
 	else
-		echo -e "${FCRED}${FBOLD}[KO]${FBOLD_OFF}${FCDEF}"
+		printf "%b\n" "${FCRED}${FBOLD}[KO]${FBOLD_OFF}${FCDEF}"
 	fi
 }
 
@@ -259,20 +259,24 @@ title() {
 	echo ""
 }
 
-# usage: obfuscate <string>(string)
+## /desc Obfuscate a value "my_value" => "m******e"
+## /usage obfuscate <value>
+## /param <value> (string) Value to obfuscate
 obfuscate() {
-	check_arguments $# 1 "obfuscate <string>(string)"
-	PASSWORD=${1}
-	LENGTH=$((${#PASSWORD}-2))
-	FIRST_CHAR=`echo ${PASSWORD} | sed -E 's/^(.{1}).*$/\1/'`
-	LAST_CHAR=`echo ${PASSWORD} | sed -E 's/^.*(.{1})$/\1/'`
-	MASK=$(printf "%0.s|*" $(seq 1 ${LENGTH}))
-	MASK=`echo ${MASK} | sed 's/|//g'`
-	OBFUSCATED="${FIRST_CHAR}${MASK}${LAST_CHAR}"
-	echo ${OBFUSCATED}
+	check_arguments $# 1 "obfuscate <value>(string)"
+	local _PASSWORD=${1}
+	local _LENGTH=$((${#_PASSWORD}-2))
+	local _FIRST_CHAR=`echo ${_PASSWORD} | sed -E 's/^(.{1}).*$/\1/'`
+	local _LAST_CHAR=`echo ${_PASSWORD} | sed -E 's/^.*(.{1})$/\1/'`
+	local _MASK=$(printf "%0.s|*" $(seq 1 ${_LENGTH}))
+	local _MASK=`echo ${_MASK} | sed 's/|//g'`
+	local _OBFUSCATED="${_FIRST_CHAR}${_MASK}${_LAST_CHAR}"
+
+	print "%s\n" "${_OBFUSCATED}"
 }
 
-# usage: ask_expected <prompt>(string) <expected>(any) [default_value](string)
+## /usage ask_expected <prompt>(string) <expected>(any) [default_value](string)
+## WARNING 1 FOR TRUE 0 FOR FALSE
 ask_expected() {
 	check_arguments $# 2 "ask_expected <expected>(any) <prompt>(string) [default_value](string)"
 	EXPECTED="${1}"
@@ -286,21 +290,73 @@ ask_expected() {
   echo 0
 }
 
-# usage: ask <prompt>(string) [default_value](string)
+## /desc Ask something
+## /usage ask <prompt> [default_value]
+## /param <prompt> (string) Prompt to display
+## /param [default_value] (string) Default value to assign
 ask() {
 	check_arguments $# 1 "ask <prompt>(string) [default_value](string)"
-	DEFAULT="none"
-	if [ -n "${2}" ]
-	then
-		DEFAULT="${2}"
+  local _PROMPT="${1}"
+  local _ASK
+
+	if [ -n "${2}" ]; then
+		local _DEFAULT="${2}"
+	  read -r -p "${_PROMPT} [${_DEFAULT}]: " _ASK
+    if [ -z "${_ASK}" ]; then
+      _ASK="${_DEFAULT}"
+    fi
+  else
+	  read -r -p "${_PROMPT}: " _ASK
 	fi
 
-	read -r -p "$(printf "${1} [${DEFAULT}]: ")" ASK
-	if [ -z ${ASK} ]
-	then
-		ASK=${DEFAULT}
-	fi
-	echo ${ASK}
+  printf "%s\n" "${_ASK}"
+}
+
+## /desc Ask something assigning variable
+## /usage ask <variable> <prompt> [default_value]
+## /param <variable> (string) Variable name without $
+## /param <prompt> (string) Prompt to display
+## /param [default_value] (string) Default value to assign
+ask_set() {
+	check_arguments $# 2 "ask <var>(string) <prompt>(string) [default_value](string)"
+	local _ASK_SET_VAR="${1}"
+	local _PROMPT="${2}"
+	local _ASK
+
+  if [ -n "${3}" ]; then
+    local _DEFAULT="${3}"
+    _ASK=$(ask "${_PROMPT}" "${_DEFAULT}")
+  else
+    _ASK=$(ask "${_PROMPT}")
+  fi
+
+  eval "${_ASK_SET_VAR}=\"${_ASK}\""
+}
+
+## /desc Ask something assigning variable only if not assigned or empty
+## /usage ask <variable> <prompt> [default_value]
+## /param <variable> (string) Variable name without $
+## /param <prompt> (string) Prompt to display
+## /param [default_value] (string) Default value to assign
+ask_set_if_unset() {
+	check_arguments $# 2 "ask <var>(string) <prompt>(string) [default_value](string)"
+	local _ASK_SET_VAR="${1}"
+	local _PROMPT="${2}"
+
+  if [ -n "${3}" ]; then
+    local _DEFAULT="${3}"
+    eval "if [ ! \"\${${_ASK_SET_VAR}+x}\" ]; then
+      _ASK=\$(ask \"${_PROMPT}\" \"${_DEFAULT}\")
+      ${_ASK_SET_VAR}=\"\${_ASK}\"
+    fi"
+  else
+    eval "if [ ! \"\${${_ASK_SET_VAR}+x}\" ]; then
+      _ASK=\$(ask \"${_PROMPT}\")
+      if [ ! -z \"\${_ASK}\" ]; then
+        ${_ASK_SET_VAR}=\"\${_ASK}\"
+      fi
+    fi"
+  fi
 }
 
 # usage: ask_hidden <prompt>(string) [default_value](string)
@@ -317,6 +373,7 @@ ask_hidden() {
 	then
 		ASK=${2}
 	fi
+
 	echo ${ASK}
 }
 
@@ -324,9 +381,11 @@ ask_hidden() {
 # TIME #
 ########
 
-# usage: timestamp
+## /desc Returns current timestamp
+## /usage timestamp
+## /return timestamp value
 timestamp() {
-	echo `date +%s`
+	printf "%d\n" "`date +%s`"
 }
 
 # usage: diff_timestamp <timestamp>(integer) [human_readable](any)

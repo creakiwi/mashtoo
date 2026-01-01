@@ -50,6 +50,7 @@ RUN apk --no-cache add \
     exfatprogs \
     f2fs-tools \
     file \
+    gettext \
     grub \
     grub-bios \
     grub-efi \

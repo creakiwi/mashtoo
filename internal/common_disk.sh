@@ -3,48 +3,89 @@
 ###########################
 
 # usage: show_partitions [with_partitions](bool:0)
-show_drives() {
-  if [ $# -eq 1 ]
+drive_list() {
+  if [ "$#" -eq 1 ] && [ "$1" = "1" ]
   then
-    echo $(lsblk -n -o NAME | sed 's|^|/dev/|')
+    lsblk -n -l -p -o NAME
   else
-    echo $(lsblk -n -d -o NAME | sed 's|^|/dev/|')
+    lsblk -n -l -d -p -o NAME
   fi
 }
 
-# usage: drive_exists <drive>(string): (bool)
+# usage: show_drives_info [with_partitions](bool:0)
+drive_list_info() {
+  if [ "$#" -eq 1 ] && [ "$1" = "1" ]
+  then
+    lsblk -p -n -o NAME,SIZE
+  else
+    lsblk -p -n -d -o NAME,SIZE
+  fi
+}
+
+## /desc Check if a drive exists or not
+## /usage drive_exists <device>
+## /param <drive> (string)
+## /return bool 0 if exists, 1 else (exist-status boolean)
 drive_exists() {
 	check_arguments $# 1 "drive_exists <drive>(string)"
+	local DRIVE=${1}
 
-  local DRIVES=$(show_drives)
-  local DRIVE_TO_CHECK=${1}
-  local DRIVE_EXISTS=0
+  [ -b "${DRIVE}" ]
+}
 
-  for DRIVE in ${DRIVES}
-  do
-    if [ "${DRIVE}" = "${DRIVE_TO_CHECK}" ]
-    then
-      DRIVE_EXISTS=1
+## /desc Check if a drive exists and is in the defined list
+## /usage drive_exists_against <drive> <drive_list>
+## /param <drive> (string) /dev/sda The drive to check
+## /param <drive_list> (string) Some space separated drives list
+## /return bool 0 if exists and in list, 1 else (exist-status boolean)
+drive_exists_against() {
+	check_arguments $# 2 "drive_exists <drive>(string) <drive_list>(string)"
+  local DRIVE=${1}
+  local DRIVE_LIST=${2}
+
+  for d in ${DRIVE_LIST}; do
+    if drive_exists "${d}" && [ "${DRIVE}" = "${d}" ]; then
+      return 0
     fi
   done
 
-  echo ${DRIVE_EXISTS}
+  return 1
+}
+
+ifndef_BOOT_FIRMWARE() {
+  if [ -z ${BOOT_FIRMWARE} ]; then
+    echo "Boot firmware"
+    echo "1. BIOS"
+    echo "2. UEFI"
+    ask_set_if_unset BOOT_FIRMWARE "Please select (bios|uefi)" "uefi"
+    case ${BOOT_FIRMWARE} in
+      1|bios|BIOS)
+        BOOT_FIRMWARE="bios"
+        ;;
+      2|uefi|UEFI)
+        BOOT_FIRMWARE="uefi"
+        ;;
+      *)
+        exit_error "Undefined boot firmware \"${BOOT_FIRMWARE}\""
+        ;;
+    esac
+  fi
 }
 
 # usage: clean_random <drive>(string)
 clean_random() {
 	check_arguments $# 1 "clean_random <drive>(string)"
-	local PARTITION=${1}
+	local DRIVE=${1}
 
-	dd if=/dev/urandom of=${PARTITION} && sync
+	dd if=/dev/urandom of=${DRIVE} && sync
 }
 
 # usage: clean_zero <drive>(string)
 clean_zero() {
 	check_arguments $# 1 "clean_zero <drive>(string)"
-	local PARTITION=${1}
+	local DRIVE=${1}
 
-	dd if=/dev/zero of=${PARTITION} && sync
+	dd if=/dev/zero of=${DRIVE} && sync
 }
 
 # usage: wipe_drive <drive>(string)
@@ -85,6 +126,7 @@ mount_partition() {
 	echo_todo "Check ${MOUNT_POINT} exists and rwx"
 	run "mount ${PARTITION} ${MOUNT_POINT}"
 }
+
 # usage: unmount_partition <mount_point>(string)
 unmount_partition() {
 	check_arguments $# 1 "unmount_partition <mount_point>(string)"
@@ -158,7 +200,10 @@ extract_boot_info() {
   run "xorriso -indev ${ISO_FILE} -report_el_torito as_mkisofs > ${EXTRACT_NAME}"
 }
 
-# usage: extract_squashfs <squashfs_file>(string) <extract_dir>(string)
+## /desc Extract a SquashFS filesystem
+## /usage extract_squashfs <squashfs_file> <extract_dir>
+## /param <squashfs_file> (string) path/to/file.squashfs The SquashFS file to extract
+## /param <extract_dir> (string) path/to/existing/extract/directory The destination directory where the SquashFS file will be extracted
 extract_squashfs() {
   check_arguments $# 2 "extract_squashfs <squashfs_file>(string) <extract_dir>(string)"
   local SQUASHFS_FILE=${1}
@@ -167,7 +212,11 @@ extract_squashfs() {
   run "unsquashfs -d ${EXTRACT_DIR} ${SQUASHFS_FILE}"
 }
 
-# usage: repack_squashfs <directory>(string) <squashfs_file>(string) [options](string)
+## /desc Create/recreate a SquashFS filesystem from directory
+## /usage repack_squashfs <directory> <squashfs_file> [options]
+## /param <directory> (string) path/to/directory The directory you want to create a SquashFS filesystem from
+## /param <squashfs_file> (string) path/to/file.squashfs The final SquashFS filesystem name
+## /param [options] (string) If provided will be appended to "mksquashfs". Please see "mksquashfs" options
 repack_squashfs() {
   check_arguments $# 2 "repack_squashfs <directory>(string) <squashfs_file>(string) [options](string)"
   local DIRECTORY=${1}
@@ -182,11 +231,17 @@ repack_squashfs() {
   run "mksquashfs ${DIRECTORY} ${SQUASHFS_FILE}${OPTIONS}"
 }
 
+## /desc Unimplemented
+## /note Searching for others ways to rebuilding ISO
 repack_iso() {
   local var
 }
 
-# usage: repack_iso_xorriso_from_report <report_file>(string) <extract_dir>(string) <output_iso>(string)
+## /desc Rebuild an ISO from extracted one with its report
+## /usage repack_iso_xorriso_from_report <report_file> <extract_dir> <output_iso>
+## /param <report_file> (string) path/to/report_file Report file created "extract_boot_info"
+## /param <extract_dir> (string) path/to/extract_dir A directory previously extracted with "extract_iso"
+## /param <output_iso> (string) path/to/new-iso-file.iso The ISO file you want to create
 repack_iso_xorriso_from_report() {
   check_arguments $# 3 "repack_iso_xorriso_from_report <report_file>(string) <extract_dir>(string) <output_iso>(string)"
   local REPORT_FILE=${1}
@@ -201,14 +256,19 @@ repack_iso_xorriso_from_report() {
   run "xorriso -as mkisofs ${REPORT_CONTENT} -o ${OUTPUT_ISO} ${EXTRACT_DIR}"
 }
 
+## /desc Copy an ISO file to a drive
+## /usage iso_to_device <iso_file> <drive>
+## /param <iso_file> (string) path/to/new-iso-file.iso The ISO file you want to write
+## /param <drive> (string) /dev/sdX The drive you want to write/"burn"
+## /deprecated should be renamed to iso_to_drive
 iso_to_device() {
-  check_arguments $# 2 "iso_to_device <iso_file>(string) <device>(string)"
+  check_arguments $# 2 "iso_to_device <iso_file>(string) <drive>(string)"
   local ISO_FILE=${1}
-  local DEVICE=${2}
+  local DRIVE=${2}
 
   if [ ! -f "${ISO_FILE}" ]; then
     exit_error "ISO file not found: ${ISO_FILE}"
   fi
 
-  run "dd if=${ISO_FILE} of=${DEVICE} bs=4096 && sync"
+  run "dd if=${ISO_FILE} of=${DRIVE} bs=4096 && sync"
 }

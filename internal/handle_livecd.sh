@@ -58,8 +58,8 @@ handle_livecd() {
 
   repack_iso_xorriso_from_report "$(tmp_dir)/boot_info" "${LIVECD_EXTRACT_POINT}" "$(tmp_dir)/$(livecd_name)-mashtoo.iso"
   iso_to_device "$(tmp_dir)/$(livecd_name)-mashtoo.iso" "${USB_DEVICE}"
-#  DRIVES=$(show_drives)
-#  PART=$(show_drives 1)
+#  DRIVES=$(drive_list)
+#  PART=$(drive_list_info 1)
 #  echo "DEVICE IZ ${USB_DEVICE}"
 #  for DRIVE in ${DRIVES}
 #  do
