@@ -1,0 +1,5 @@
+label: dos
+
+1 : size=${BOOT_SIZE}, type=83, bootable
+2 : size=${SWAP_SIZE}, type=82
+3 : type=83

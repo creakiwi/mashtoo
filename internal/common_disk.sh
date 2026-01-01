@@ -52,12 +52,15 @@ drive_exists_against() {
   return 1
 }
 
+## /desc Define BOOT_FIRMWARE var by asking only if not defined
 ifndef_BOOT_FIRMWARE() {
   if [ -z ${BOOT_FIRMWARE} ]; then
     echo "Boot firmware"
     echo "1. BIOS"
     echo "2. UEFI"
+
     ask_set_if_unset BOOT_FIRMWARE "Please select (bios|uefi)" "uefi"
+
     case ${BOOT_FIRMWARE} in
       1|bios|BIOS)
         BOOT_FIRMWARE="bios"
@@ -70,6 +73,54 @@ ifndef_BOOT_FIRMWARE() {
         ;;
     esac
   fi
+}
+
+## /desc Define INSTALL_DRIVE var by asking only if not defined
+ifndef_INSTALL_DRIVE() {
+  if [ -z ${INSTALL_DRIVE} ]; then
+    local _DRIVES=$(drive_list)
+    drive_list_info 1
+
+    ask_set_if_unset INSTALL_DRIVE "Installation drive" "none"
+
+    if ! drive_exists_against "${INSTALL_DRIVE}" "${_DRIVES}"; then
+      exit_error "Drive \"${INSTALL_DRIVE}\" does not exists or not in:\n${_DRIVES}."
+    fi
+  fi
+}
+
+## /desc Create partition table
+## /usage partitions_create <device> [partition_file]
+## /param device (string) The device to create the partition table to
+## /param [partition_file] (string) If defined, use the given partition table, otherwise will help choose between BIOS and UEFI
+partitions_create() {
+	check_arguments $# 1 "partitions_create <device> [partition_file]"
+	local _INSTALL_DEVICE_DIRECTORY="${1}"
+	local _PARTITION_FILE
+
+  ifndef_INSTALL_DRIVE
+
+	if [ -n "${2}" ]; then
+	  _PARTITION_FILE="${2}"
+  else
+    ifndef_BOOT_FIRMWARE
+
+    case ${BOOT_FIRMWARE} in
+      bios|uefi)
+        _PARTITION_FILE="$(tpl_dir)/partitions/partitions_table_${BOOT_FIRMWARE}.sfdisk"
+        ;;
+      *)
+        exit_error "Invalid boot firmware \"${BOOT_FIRMWARE}\""
+        ;;
+      esac
+  fi
+
+  if [ ! -f "${_PARTITION_FILE}" ]; then
+    exit_error "Partition file not found: ${_PARTITION_FILE}"
+  fi
+
+  #envsubst < "${_PARTITION_FILE}" | sfdisk ${_INSTALL_DEVICE_DIRECTORY}
+  echo "$(envsubst < "${_PARTITION_FILE}")"
 }
 
 # usage: clean_random <drive>(string)

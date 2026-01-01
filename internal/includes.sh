@@ -17,11 +17,11 @@ fi
 
 cat ${MASHTOO_DIR}/internal/assets/logo_colored
 
-echo -e "Version: ${FBOLD}${FCGREEN}0.2${FCDEF}"
-echo -e "Author: ${FBOLD}${FCGREEN}Alex Ception <alexandre@creakiwi.com>${FCDEF}"
-echo -e "Repositories:"
-echo -e "\t - ${FBOLD}${FCGREEN}https://github.com/creakiwi/mashtoo${FCDEF}"
-echo -e "\t - ${FBOLD}${FCGREEN}https://gitlab.com/creakiwi/mashtoo${FCDEF}"
-echo -e "License: ${FBOLD}${FCGREEN}ANY-WARE LICENSE${FCDEF}"
-echo -e "git.license: ${FBOLD}${FCGREEN}$(cat ${MASHTOO_DIR}/gift.license)${FCDEF}\n"
+printf "Version: ${FBOLD}${FCGREEN}0.2${FCDEF}\n"
+printf "Author: ${FBOLD}${FCGREEN}Alex Ception <alexandre@creakiwi.com>${FCDEF}\n"
+printf "Repositories:\n"
+printf " - ${FBOLD}${FCGREEN}https://github.com/creakiwi/mashtoo${FCDEF}\n"
+printf " - ${FBOLD}${FCGREEN}https://gitlab.com/creakiwi/mashtoo${FCDEF}\n"
+printf "License: ${FBOLD}${FCGREEN}ANY-WARE LICENSE${FCDEF}\n"
+printf "git.license: ${FBOLD}${FCGREEN}$(cat ${MASHTOO_DIR}/gift.license)${FCDEF}\n\n"
 cat ${MASHTOO_DIR}/LICENSE

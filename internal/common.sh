@@ -348,12 +348,14 @@ ask_set_if_unset() {
     eval "if [ ! \"\${${_ASK_SET_VAR}+x}\" ]; then
       _ASK=\$(ask \"${_PROMPT}\" \"${_DEFAULT}\")
       ${_ASK_SET_VAR}=\"\${_ASK}\"
+      export ${_ASK_SET_VAR}
     fi"
   else
     eval "if [ ! \"\${${_ASK_SET_VAR}+x}\" ]; then
       _ASK=\$(ask \"${_PROMPT}\")
       if [ ! -z \"\${_ASK}\" ]; then
         ${_ASK_SET_VAR}=\"\${_ASK}\"
+        export ${_ASK_SET_VAR}
       fi
     fi"
   fi
