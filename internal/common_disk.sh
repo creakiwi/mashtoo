@@ -115,9 +115,23 @@ partitions_create() {
       esac
   fi
 
-  if [ ! -f "${_PARTITION_FILE}" ]; then
-    exit_error "Partition file not found: ${_PARTITION_FILE}"
-  fi
+  file_exists_regular "${_PARTITION_FILE}" 1
+
+  local _DEFAULT
+  local _PARTITION_VARS=$(file_extract_variables "${_PARTITION_FILE}")
+  for _PARTITION_VAR in ${_PARTITION_VARS}; do
+    case "${_PARTITION_VAR}" in
+      BOOT_SIZE)
+        _DEFAULT="1GiB"
+        ;;
+      SWAP_SIZE)
+        _DEFAULT="4GiB"
+        ;;
+      *)
+        ;;
+    esac
+    ask_set_if_unset "${_PARTITION_VAR}" "variable $_PARTITION_VAR" "$_DEFAULT"
+  done
 
   #envsubst < "${_PARTITION_FILE}" | sfdisk ${_INSTALL_DEVICE_DIRECTORY}
   echo "$(envsubst < "${_PARTITION_FILE}")"

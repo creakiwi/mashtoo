@@ -142,5 +142,5 @@ obfuscate() {
 	local _MASK=`echo ${_MASK} | sed 's/|//g'`
 	local _OBFUSCATED="${_FIRST_CHAR}${_MASK}${_LAST_CHAR}"
 
-	print ''%s\n' "${_OBFUSCATED}"
+	print '%s\n' "${_OBFUSCATED}"
 }
