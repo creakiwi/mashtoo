@@ -21,9 +21,7 @@ _check_disk() {
 }
 
 _erase_disk() {
-  RESULT=$(ask_expected "yes" "${FCYELLOW}Are you sure you want to erase ${FBOLD}${USB_DEVICE}${FBOLD_OFF} ? (yes/no)${FCDEF}" "no")
-  if [ 0 -eq ${RESULT} ]
-  then
+  if ! ask_expected "yes" "${FCYELLOW}Are you sure you want to erase ${FBOLD}${USB_DEVICE}${FBOLD_OFF} ? (yes/no)${FCDEF}" "no"; then
     exit_llama "You are not really sure you want to erase ${USB_DEVICE}."
   fi
 }

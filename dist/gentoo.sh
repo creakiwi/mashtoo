@@ -63,8 +63,8 @@ checksum_dist_gentoo() {
     gpg --verify "`livecd_iso_path`.asc"
   fi
 
-  VERIFIED_SHA256=$(checksum_extract_from_file "SHA256" "`livecd_iso_path`.sha256")
-  COMPUTED_SHA256=$(checksum_extract_from_string "SHA256" "$(sha256sum "`livecd_iso_path`")")
+  VERIFIED_SHA256=$(checksum_extract_from_file "`livecd_iso_path`.sha256")
+  COMPUTED_SHA256=$(checksum_extract_from_string "$(sha256sum "`livecd_iso_path`")")
   echo_info "Verified checksum: ${FBOLD}${VERIFIED_SHA256}${FBOLD_OFF}"
   echo_info "Computed checksum: ${FBOLD}${COMPUTED_SHA256}${FBOLD_OFF}"
   if [ "${VERIFIED_SHA256}" == "${COMPUTED_SHA256}" ]
