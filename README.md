@@ -3,7 +3,7 @@
 
 Originaly set to create gentoo install easily through ssh with some core minimal configuations.
 
-The project evolved to be a full featured set of tools cross GNU/Linux distribution.
+The project evolved to be a full featured set of cross-tools GNU/Linux distributions.
 
 ## Constraints
 
