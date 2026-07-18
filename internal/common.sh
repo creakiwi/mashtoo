@@ -1,4 +1,8 @@
-# usage: check_arguments <passed_parameters>(integer) <needed_parameters>(integer) [usage](string)
+## /desc Check arguments passed to a function or exit
+## /usage check_arguments <passed_parameters>(integer) <needed_parameters>(integer) [usage](string)
+## /param <passed_parameters> (integer) Number of given parameters
+## /param <needed_parameters> (integer) Expected number of parameters
+## /param [usage] (string) If defined display the usage
 check_arguments() {
 	if [ $# -lt 2 ]
 	then
@@ -18,32 +22,45 @@ check_arguments() {
 	fi
 }
 
-# usage: run_quiet ...<any>
+## /desc Run command quietly displaying result and elapsed time
+## /usage run_quiet ...<any>
+## /param ...<any> The commmand to run
 run_quiet() {
-	local TIMESTAMP=`timestamp`
-	local COMMAND=$@
+	local _TIMESTAMP=$(timestamp)
+	local _COMMAND=$@
 
-	echo -e -n "Running \"${FCBLUE}$@${FCDEF}\"..."
-	eval "${COMMAND}" > /dev/null 2>&1
+	printf "Running \"%b%s%b\"..." "${FCBLUE}" "$*" "${FCDEF}"
+	#echo -e -n "Running \"${FCBLUE}$@${FCDEF}\"..."
+	eval "${_COMMAND}" > /dev/null 2>&1
 	if [ $? -eq 0 ]; then
-		echo_ok "(`diff_timestamp ${TIMESTAMP} 1`)"
+		echo_ok "($(diff_timestamp "${_TIMESTAMP}" 1))"
 	else
-		echo_ko "(`diff_timestamp ${TIMESTAMP} 1`)"
+		echo_ko "($(diff_timestamp "${_TIMESTAMP}" 1))"
 	fi
 }
 
-# usage: run ...<any>
-run() {
-	local TIMESTAMP=`timestamp`
-	local COMMAND=$@
 
-	echo -e -n "Running \"${FCBLUE}$@${FCDEF}\"..."
-	eval "${COMMAND}"
+## /desc Run command quietly displaying result and elapsed time
+## /usage run ...<any>
+## /param ...<any> The commmand to run
+run() {
+	local _TIMESTAMP=$(timestamp)
+	local _COMMAND=$@
+
+	printf "Running \"%b%s%b\"..." "${FCBLUE}" "$*" "${FCDEF}"
+	#echo -e -n "Running \"${FCBLUE}$@${FCDEF}\"..."
+	log_info "run \"$@\""
+	eval "${_COMMAND}"
 	if [ $? -eq 0 ]; then
-		echo_ok "(`diff_timestamp ${TIMESTAMP} 1`)"
+		echo_ok "(`diff_timestamp ${_TIMESTAMP} 1`)"
 	else
-		echo_ko "(`diff_timestamp ${TIMESTAMP} 1`)"
+		echo_ko "(`diff_timestamp ${_TIMESTAMP} 1`)"
 	fi
+}
+
+command_exists() {
+  check_arguments $# 1 "command_exists <command>(string)"
+  command -v "${1}" >/dev/null 2>&1
 }
 
 #############
@@ -55,7 +72,7 @@ download() {
 	check_arguments $# 2 "download <source>(string) <destination>(string) [override](any)"
 	local SOURCE=${1}
 	local DESTINATION=${2}
-	local OVERRIDE=${3}
+	local OVERRIDE=${3:-}
 
  if [ -f "${DESTINATION}" ] && [ -r "${DESTINATION}" ] && [ -z "${OVERRIDE}" ]
   then

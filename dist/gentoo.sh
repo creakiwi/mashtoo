@@ -34,6 +34,7 @@ download_dist_gentoo() {
   fi
 
   local BASE_URL="https://gentoo.osuosl.org/releases/${DEFINED_ARCH}/autobuilds/"
+  BASE_URL="https://gentoo.mirrors.ovh.net/gentoo-distfiles/releases/${DEFINED_ARCH}/autobuilds/"
   local GPG_ISO_URL="${BASE_URL}latest-"
   if [ ${NETINST} -eq 1 ]
   then
@@ -55,7 +56,7 @@ download_dist_gentoo() {
 }
 
 checksum_dist_gentoo() {
-  if [ 1 == 1 ]
+  if [ 1 -eq 1 ]
   then
     echo_warn "Currently does not verify gpg keys as files are downloaded from trusted source."
   else
@@ -67,7 +68,7 @@ checksum_dist_gentoo() {
   COMPUTED_SHA256=$(checksum_extract_from_string "$(sha256sum "`livecd_iso_path`")")
   echo_info "Verified checksum: ${FBOLD}${VERIFIED_SHA256}${FBOLD_OFF}"
   echo_info "Computed checksum: ${FBOLD}${COMPUTED_SHA256}${FBOLD_OFF}"
-  if [ "${VERIFIED_SHA256}" == "${COMPUTED_SHA256}" ]
+  if [ "${VERIFIED_SHA256}" = "${COMPUTED_SHA256}" ]
   then
     echo_ok "Checksums matches"
   else

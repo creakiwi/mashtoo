@@ -6,7 +6,7 @@ reprap() {
 
 	local DIRECTORY=${1}
 	local MASHTOO_SRC_DIR=$(dirname "${MASHTOO_DIR}")
-	local MASHTOO_DST="${DIRECTORY}/mashtoo/"
+	local MASHTOO_DST="${DIRECTORY}/mashtoo"
 
   echo_todo "Should clone but not for now"
   run "mkdir -p ${MASHTOO_DST}"

@@ -1,11 +1,15 @@
 #!/bin/sh
+set -eu
+
+. ./.env
 
 MASHTOO_DIR="."
 
 . "$MASHTOO_DIR/mashtoo.sh"
 
-function live_in_initramfs_callback_gentoo() {
-  set_locale "fr" "fr_FR.UTF-8"
+live_in_initramfs_callback_gentoo() {
+
+  set_locale "${LOCALE_KEYMAP}" "${LOCALE_LANG}" "${INITRAMFS_EXTRACT_POINT}"
   ssh_at_boot "${INITRAMFS_EXTRACT_POINT}"
 }
 

@@ -8,7 +8,7 @@
 checksum_extract_from_file() {
 	check_arguments $# 1 "checksum_extract_from_file <file>(string) [type](string)"
   local _FILE="${1}"
-	local _TYPE=$(checksum_type_normalize "${2:-sha256}")
+	local _TYPE=$(lower "${2:-sha256}")
 	checksum_type_validate "${_TYPE}"
 	file_exists_regular "${_FILE}" 1
 	local _CONTENT
@@ -29,7 +29,7 @@ checksum_extract_from_file() {
 checksum_extract_from_string() {
 	check_arguments $# 1 "checksum_extract_from_string <string>(string) [type](string)"
 	local _STRING="${1}"
-	local _TYPE=$(checksum_type_normalize "${2:-sha256}")
+	local _TYPE=$(lower "${2:-sha256}")
 	checksum_type_validate "${_TYPE}"
 
   case "${_TYPE}" in
@@ -53,7 +53,7 @@ checksum_extract_from_string() {
 ## /todo Add parameter [exit] if defined to 1 then exit, return 1 else
 checksum_type_validate() {
 	check_arguments $# 1 "checksum_type_validate <type>(string)"
-  local _TYPE=$(checksum_type_normalize "${1}")
+  local _TYPE=$(lower "${1}")
 
   case "${_TYPE}" in
     sha256|sha512)
@@ -63,15 +63,4 @@ checksum_type_validate() {
       exit_error "Unsupported checksum type \"${_TYPE}\""
       ;;
   esac
-}
-
-## /desc Normalize checksum type
-## /usage checksum_type_normalize <type>(string)
-## /param <type> (string)
-## /return (string) Normalized checksum type
-checksum_type_normalize() {
-	check_arguments $# 1 "checksum_type_normalize <type>(string)"
-	local _TYPE="${1}"
-
-  printf '%s' "${_TYPE}" | tr '[:upper:]' '[:lower:]'
 }
