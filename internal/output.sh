@@ -4,23 +4,23 @@
 echo_llama() {
 	check_arguments $# 1 "echo_llama <message>(string)"
 	local _MESSAGE="${1}"
-  local _CLEANED_MESSAGE=$(printf "%s" "${_MESSAGE}" | sed -E 's/(\x1B|\033)\[[0-9;]*[mK]//g' | sed -E 's/\\e\[[0-9;]*[a-zA-Z]//g')
+	local _CLEANED_MESSAGE=$(printf "%s" "${_MESSAGE}" | sed -E 's/(\x1B|\033)\[[0-9;]*[mK]//g' | sed -E 's/\\e\[[0-9;]*[a-zA-Z]//g')
 
 	log_llama "${_MESSAGE}"
 	echo_todo "Use llama_colors in echo_llama"
 
 	local _COLORS="31 33 32 36 34 35 91"
-  local _i=0
-  local _char
-  local _color
+	local _i=0
+	local _char
+	local _color
 
-  while [ $_i -lt ${#_CLEANED_MESSAGE} ]; do
-    _CHAR=$(printf "%s" "${_MESSAGE}" | cut -c $((_i+1)))
-    _COLOR=$(echo ${_COLORS} | cut -d' ' -f $(( (_i % 7) + 1 )))
-    _i=$((_i + 1))
-    printf '\033[${_COLOR}m%s\033[0m' "${_CHAR}"
-  done
-  printf '\n'
+	while [ $_i -lt ${#_CLEANED_MESSAGE} ]; do
+		_CHAR=$(printf "%s" "${_MESSAGE}" | cut -c $((_i+1)))
+		_COLOR=$(echo ${_COLORS} | cut -d' ' -f $(( (_i % 7) + 1 )))
+		_i=$((_i + 1))
+		printf '\033[${_COLOR}m%s\033[0m' "${_CHAR}"
+	done
+	printf '\n'
 }
 
 ## /desc Print OK style formatted message
@@ -86,7 +86,7 @@ echo_warn() {
 ## /param [message] (string) Message to prepend
 echo_ko() {
 	if [ -n "$1" ]; then
-	  local _MESSAGE
+	  local _MESSAGE="${1}"
 	  log_error "${_MESSAGE}"
 		printf '%b\n' "${FCRED}${_MESSAGE} ${FBOLD}[KO]${FBOLD_OFF}${FCDEF}"
 	else

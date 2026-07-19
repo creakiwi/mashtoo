@@ -27,7 +27,25 @@ file_exists_regular() {
 file_extract_variables() {
   check_arguments $# 1 "file_extract_variables <file>(string)"
   local _FILE="${1}"
-  file_exists_regular "${_FILE}"
+  file_exists_regular "${_FILE}" 1
 
   grep -o '\${[A-Za-z_][A-Za-z0-9_]*}' "${_FILE}" | tr -d '${}' | sort -u
+}
+
+file_substitute_variables() {
+  check_arguments $# 1 "file_substitute_variables <file>(string)"
+  local _FILE="${1}"
+  file_exists_regular "${_FILE}" 1
+
+  envsubst < "${_FILE}"
+}
+
+source_file() {
+	check_arguments $# 1 "source_file <file>(string)"
+	_file="${1}"
+	if file_exists_regular "${_file}" 0; then
+		. "${_file}"
+	else
+		echo_warn "File ${BLUE}${_file}${FCDEF}"
+	fi
 }

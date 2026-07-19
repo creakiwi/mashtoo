@@ -2,11 +2,8 @@
 
 if [ -z ${MASHTOO_DIR} ]
 then
-  echo "You must define MASHTOO_DIR variable (ex: MASHTOO_DIR=\"/home/alexception/mashtoo\")"
+  echo "You must define MASHTOO_DIR variable (ex: MASHTOO_DIR=\"/usr/local/sbin/mashtoo\")"
   exit
 fi
 
-#MAIN_DIR=$(cd "$(dirname "$0")" && pwd)
-
 . ${MASHTOO_DIR}/internal/includes.sh
-

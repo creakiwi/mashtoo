@@ -24,12 +24,29 @@ services:
             - USB_DEVICE=${USB_DEVICE:-}
             - DEBUG=${DEBUG:-1}
         privileged: true
+        restart: unless-stopped
         devices:
             - /dev:/dev
         volumes:
             - /dev:/dev
             - ./:/home/mashtoo
 
+#    mashtoo-cc-x86:
+#        build:
+#            context: .
+#            dockerfile: mashtoo-cc-x86.Dockerfile
+#        container_name: mashtoo-cc-x86
+#        restart: unless-stopped
+    distcc-i686:
+        build:
+            context: .
+            dockerfile: mashtoo-cc-x86.Dockerfile
+        container_name: mashtoo-cc-x86
+        restart: unless-stopped
+        ports:
+            - "3632:3632"
+            - "3633:3633"
+        network_mode: host
 #networks:
 #    mashtoo:
 #        name: mashtoo

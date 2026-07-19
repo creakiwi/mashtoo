@@ -1,5 +1,3 @@
-#!/bin/sh
-
 for file in ${MASHTOO_DIR}/internal/*.sh
 do
   if [ "$(basename "${file}")" != "includes.sh" ] && [ -f "${file}" ]

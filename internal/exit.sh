@@ -16,13 +16,11 @@ exit_llama() {
 ## /param [error_message] (string) The error message
 ## /param [error_code] (integer) The error code
 exit_error() {
-	if [ "${#}" -eq 1 ]
-	then
+	if [ "${#}" -eq 1 ]; then
 		echo_ko "${1}"
 	fi
 
-	if [ "${#}" -ge 1 ]
-	then
+	if [ "${#}" -ge 1 ]; then
 		exit ${2}
 	fi
 

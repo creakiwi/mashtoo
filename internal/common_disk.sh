@@ -1,56 +1,3 @@
-###########################
-# DISKS/DRIVES/PARTITIONS #
-###########################
-
-# usage: show_partitions [with_partitions](bool:0)
-drive_list() {
-  if [ "$#" -eq 1 ] && [ "$1" = "1" ]
-  then
-    lsblk -n -l -p -o NAME
-  else
-    lsblk -n -l -d -p -o NAME
-  fi
-}
-
-# usage: show_drives_info [with_partitions](bool:0)
-drive_list_info() {
-  if [ "$#" -eq 1 ] && [ "$1" = "1" ]
-  then
-    lsblk -p -n -o NAME,SIZE
-  else
-    lsblk -p -n -d -o NAME,SIZE
-  fi
-}
-
-## /desc Check if a drive exists or not
-## /usage drive_exists <device>
-## /param <drive> (string)
-## /return bool 0 if exists, 1 else (exist-status boolean)
-drive_exists() {
-	check_arguments $# 1 "drive_exists <drive>(string)"
-	local DRIVE=${1}
-
-  [ -b "${DRIVE}" ]
-}
-
-## /desc Check if a drive exists and is in the defined list
-## /usage drive_exists_against <drive> <drive_list>
-## /param <drive> (string) /dev/sda The drive to check
-## /param <drive_list> (string) Some space separated drives list
-## /return bool 0 if exists and in list, 1 else (exist-status boolean)
-drive_exists_against() {
-	check_arguments $# 2 "drive_exists <drive>(string) <drive_list>(string)"
-  local DRIVE=${1}
-  local DRIVE_LIST=${2}
-
-  for d in ${DRIVE_LIST}; do
-    if drive_exists "${d}" && [ "${DRIVE}" = "${d}" ]; then
-      return 0
-    fi
-  done
-
-  return 1
-}
 
 ## /desc Define BOOT_FIRMWARE var by asking only if not defined
 ifndef_BOOT_FIRMWARE() {
@@ -72,36 +19,37 @@ ifndef_BOOT_FIRMWARE() {
         exit_error "Undefined boot firmware \"${BOOT_FIRMWARE}\""
         ;;
     esac
+    log_debug "BOOT_FIRMWARE=${BOOT_FIRMWARE}"
   fi
 }
 
-## /desc Define INSTALL_DRIVE var by asking only if not defined
-ifndef_INSTALL_DRIVE() {
-  if [ -z ${INSTALL_DRIVE} ]; then
-    local _DRIVES=$(drive_list)
+## /desc Define INSTALL_DEVICE var by asking only if not defined
+ifndef_INSTALL_DEVICE() {
+  if [ -z ${INSTALL_DEVICE} ]; then
+    local _DEVICES=$(drive_list)
     drive_list_info 1
 
-    ask_set_if_unset INSTALL_DRIVE "Installation drive" "none"
+    ask_set_if_unset INSTALL_DEVICE "Installation drive" "none"
 
-    if ! drive_exists_against "${INSTALL_DRIVE}" "${_DRIVES}"; then
-      exit_error "Drive \"${INSTALL_DRIVE}\" does not exists or not in:\n${_DRIVES}."
+    if ! drive_exists_against "${INSTALL_DEVICE}" "${_DEVICES}"; then
+      exit_error "Drive \"${INSTALL_DEVICE}\" does not exists or not in:\n${_DEVICES}."
     fi
+    log_debug "INSTALL_DEVICE=${INSTALL_DEVICE}"
   fi
 }
 
 ## /desc Create partition table
-## /usage partitions_create <device> [partition_file]
+## /usage partitions_create [partition_file]
 ## /param device (string) The device to create the partition table to
 ## /param [partition_file] (string) If defined, use the given partition table, otherwise will help choose between BIOS and UEFI
+## /callback partitions_create_make_filesystem()
 partitions_create() {
-	check_arguments $# 1 "partitions_create <device> [partition_file]"
-	local _INSTALL_DEVICE_DIRECTORY="${1}"
 	local _PARTITION_FILE
 
-  ifndef_INSTALL_DRIVE
+  ifndef_INSTALL_DEVICE
 
-	if [ -n "${2}" ]; then
-	  _PARTITION_FILE="${2}"
+	if [ -n "${1}" ]; then
+	  _PARTITION_FILE="${1}"
   else
     ifndef_BOOT_FIRMWARE
 
@@ -133,8 +81,17 @@ partitions_create() {
     ask_set_if_unset "${_PARTITION_VAR}" "variable $_PARTITION_VAR" "$_DEFAULT"
   done
 
-  #envsubst < "${_PARTITION_FILE}" | sfdisk ${_INSTALL_DEVICE_DIRECTORY}
-  echo "$(envsubst < "${_PARTITION_FILE}")"
+  echo "$(file_substitute_variables "${_PARTITION_FILE}")"
+  echo ""
+  file_substitute_variables "${_PARTITION_FILE}" | sfdisk --no-act ${INSTALL_DEVICE}
+  if ! ask_confirm_yes "Please validate the new partition changes... (type 'yes' to validate)"; then
+    exit_error "Changes not validated."
+  fi
+  file_substitute_variables "${_PARTITION_FILE}" | sfdisk ${INSTALL_DEVICE}
+
+  if command_exists "partitions_create_make_filesystem"; then
+    partitions_create_make_filesystem
+  fi
 }
 
 # usage: clean_random <drive>(string)
@@ -297,7 +254,7 @@ repack_squashfs() {
 }
 
 ## /desc Unimplemented
-## /note Searching for others ways to rebuilding ISO
+## /note Searching for others ways to rebuilding ISOF
 repack_iso() {
   local var
 }

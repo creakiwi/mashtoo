@@ -1,9 +1,6 @@
-#!/bin/sh
-
 copy_files_to_initramfs() {
   run "cp -R $(custom_dir)/initramfs/. ${INITRAMFS_EXTRACT_POINT}/"
 }
-
 
 live_in_initramfs() {
   if command -v live_in_initramfs_callback >/dev/null 2>&1
@@ -46,7 +43,7 @@ handle_livecd() {
   copy_files_to_initramfs
   live_in_initramfs
 
-  reprap ${INITRAMFS_EXTRACT_POINT}/usr/local/bin
+  reprap ${INITRAMFS_EXTRACT_POINT}/opt/
 
   if command -v repack_initramfs_${DIST} >/dev/null 2>&1
   then

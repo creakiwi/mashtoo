@@ -9,7 +9,13 @@ ask_expected() {
 	shift
 	local _ANSWER=$(ask "$@")
 
-	[ "${_EXPECTED}" = "${_ANSWER}" ]
+	[ "$(lower "${_EXPECTED}")" = "$(lower "${_ANSWER}")" ]
+}
+
+ask_confirm_yes() {
+  check_arguments $# 1 "ask_confirm_yes <prompt>"
+
+  ask_expected "yes" "$@"
 }
 
 ## /desc Ask something
@@ -17,19 +23,20 @@ ask_expected() {
 ## /param <prompt> (string) Prompt to display
 ## /param [default_value] (any) Default value to assign
 ask() {
-    check_arguments $# 1 "ask <prompt>(string) [default_value](any)"
+  check_arguments $# 1 "ask <prompt>(string) [default_value](any)"
   local _PROMPT="${1}"
+  local _DEFAULT="${2}"
   local _ANSWER
 
-	if [ -n "${2}" ]; then
-		local _DEFAULT="${2}"
-	  read -r -p "${_PROMPT} [${_DEFAULT}]: " _ANSWER
-    if [ -z "${_ANSWER}" ]; then
-      _ANSWER="${_DEFAULT}"
-    fi
+  if [ -n "${_DEFAULT}" ]; then
+    read -r -p "${_PROMPT} [${_DEFAULT}]: " _ANSWER
   else
-	  read -r -p "${_PROMPT}: " _ANSWER
-	fi
+    read -r -p "${_PROMPT}: " _ANSWER
+  fi
+
+  if [ -z "${_ANSWER}" ] && [ -n "${_DEFAULT}" ]; then
+    _ANSWER="${_DEFAULT}"
+  fi
 
   printf '%s\n' "${_ANSWER}"
 }
