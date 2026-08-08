@@ -68,9 +68,10 @@ mirrors_select() {
        _max="${1}"
     fi
 
-	_proxies_file="./tmp/${DIST}_proxies"
+	_proxies_file="$(tmp_dir)/${DIST}_proxies"
 
-	if [ -f "${_proxies_file}" ]; then
+#	if [ -f "${_proxies_file}" ]; then
+	if [ 1 -eq 0 ]; then
 		echo_info "Getting best proxy from cache"
 	else
 		get_mirrors_list
@@ -80,10 +81,10 @@ mirrors_select() {
 		set -- $_mirrors
 		_total=$#
 
+		echo_todo "cache file for proxy"
 		i=0
 	    echo_info "Testing $_total mirrors (this may take a few minutes)..." >&2
 
-		# Capture de toute la sortie du bloc dans la variable r_mirrors_select
 		r_mirrors_select=$(
 			{
 				for url in $_mirrors; do
@@ -113,16 +114,19 @@ mirrors_select() {
 			# 5. Sort numerically, keep the top $_max results, and extract ONLY the URL (column 2)
 			} | sort -n | head -n "$_max" | awk '{print $2}'
 		)
+
+		echo "${r_mirrors_select}" > "${_proxies_file}"
 	fi
 
-	echo_todo "cache file for proxy"
-	#echo "${r_mirrors_select}" > "${_proxies_file}"
 
     return 0
 }
 
 get_mirrors_list() {
-    r_get_mirrors_list=$(curl -s https://api.gentoo.org/mirrors/distfiles.xml | sed -n 's|.*<uri[^>]*>\(.*\)</uri>.*|\1|p')
+    #r_get_mirrors_list=$(curl -s https://api.gentoo.org/mirrors/distfiles.xml | sed -n 's|.*<uri[^>]*>\(.*\)</uri>.*|\1|p')
+    # ignore gtp/rsync
+    echo_warn "Ignore rsync:// and ftp:// as download command only use wget or curl."
+	r_get_mirrors_list=$(curl -s https://api.gentoo.org/mirrors/distfiles.xml | sed -n 's|.*<uri[^>]*>\(https\?://.*\)</uri>.*|\1|p')
 
     return 0
 }
@@ -149,27 +153,62 @@ download_stage3()
 
 	_full_stage3_txt="${_base_url}${_stage3_txt}"
 	_stage3_path=$(curl -sSL "$_full_stage3_txt" | awk '/^[0-9].*\.tar\.xz/ {print $1}')
-	_full_stage3_file=$"${_base_url}${_stage3_path}"
-	_dst_stage3="./tmp/${_stage3_path}"
+	_stage3_filename="${_stage3_path##*/}"
+	_full_stage3_file="${_base_url}${_stage3_path}"
+	_tmp_dst_stage3="$(tmp_dir)/${_stage3_filename}"
 
-	if [ ! -f "${_dst_stage3}" ] \
-		|| [ ! -f "${_dst_stage3}.CONTENTS.gz" ] \
-		|| [ ! -f "${_dst_stage3}.DIGESTS" ] \
-		|| [ ! -f "${_dst_stage3}.asc" ] \
-		|| [ ! -f "${_dst_stage3}.sha256" ]; then
-		download "${_full_stage3_file}" "${_dst_stage3}"
-		download "${_full_stage3_file}.CONTENTS.gz" "${_dst_stage3}.CONTENTS.gz"
-		download "${_full_stage3_file}.DIGESTS" "${_dst_stage3}.DIGESTS"
-		download "${_full_stage3_file}.asc" "${_dst_stage3}.asc"
-		download "${_full_stage3_file}.sha256" "${_dst_stage3}.sha256"
+	if [ ! -f "${_tmp_dst_stage3}" ] \
+		|| [ ! -f "${_tmp_dst_stage3}.CONTENTS.gz" ] \
+		|| [ ! -f "${_tmp_dst_stage3}.DIGESTS" ] \
+		|| [ ! -f "${_tmp_dst_stage3}.asc" ] \
+		|| [ ! -f "${_tmp_dst_stage3}.sha256" ]; then
+		download "${_full_stage3_file}" "${_tmp_dst_stage3}"
+		download "${_full_stage3_file}.CONTENTS.gz" "${_tmp_dst_stage3}.CONTENTS.gz"
+		download "${_full_stage3_file}.DIGESTS" "${_tmp_dst_stage3}.DIGESTS"
+		download "${_full_stage3_file}.asc" "${_tmp_dst_stage3}.asc"
+		download "${_full_stage3_file}.sha256" "${_tmp_dst_stage3}.sha256"
 	else
 		echo_ok "${_stage3_path} and verification files already downloaded"
 	fi
 
-	run "cp ${_dst_stage3} ${_initramfs_root_dir}/${_stage3_path}"
-	run "cp ${_dst_stage3}.CONTENTS.gz ${_initramfs_root_dir}/${_stage3_path}.CONTENTS.ge"
-	run "cp ${_dst_stage3}.DIGESTS ${_initramfs_root_dir}/${_stage3_path}.DIGESTS"
-	run "cp ${_dst_stage3}.asc ${_initramfs_root_dir}/${_stage3_path}.asc"
-	run "cp ${_dst_stage3}.sha512 ${_initramfs_root_dir}/${_stage3_path}.sha512"
+	verify_stage3_signature "${_tmp_dst_stage3}"
+
+	echo_ok "Copying stage3 files to initramfs"
+	_initramfs_dst_stage3="${_initramfs_root_dir}/${_stage3_filename}"
+	run "cp ${_tmp_dst_stage3} ${_initramfs_dst_stage3}"
+	run "cp ${_tmp_dst_stage3}.CONTENTS.gz ${_initramfs_dst_stage3}.CONTENTS.gz"
+	run "cp ${_tmp_dst_stage3}.DIGESTS ${_initramfs_dst_stage3}.DIGESTS"
+	run "cp ${_tmp_dst_stage3}.DIGESTS.verified ${_initramfs_dst_stage3}.DIGESTS.verified"
+	run "cp ${_tmp_dst_stage3}.asc ${_initramfs_dst_stage3}.asc"
+	run "cp ${_tmp_dst_stage3}.sha256 ${_initramfs_dst_stage3}.sha256"
+	run "cp ${_tmp_dst_stage3}.sha256.verified ${_initramfs_dst_stage3}.sha256.verified"
 }
 
+verify_stage3_signature() {
+	check_arguments "${#}" "1" "verify_signatures <tmp_stage3_path>(string)"
+	_tmp_dst_stage3="${1}"
+
+	echo_ok "Verify Stage3 signatures"
+
+	run "rm $(tmp_dir)/*.verified"
+	run "gpg --keyserver hkps://keys.gentoo.org --recv-keys 13EBBDBEDE7A12775DFDB1BABB572E0E2D182910"
+	run "gpg --verify \"${_tmp_dst_stage3}.asc\" \"${_tmp_dst_stage3}\""
+	if [ "${?}" -ne 0 ]; then
+		exit_error "Unable to verify ${_tmp_dst_stage3} signature."
+		return 1
+	fi
+
+	run "gpg --output \"${_tmp_dst_stage3}.DIGESTS.verified\" --verify \"${_tmp_dst_stage3}.DIGESTS\""
+	if [ "${?}" -ne 0 ]; then
+		exit_error "Unable to verify ${_tmp_dst_stage3}.DIGESTS signature."
+		return 1
+	fi
+
+	run "gpg --output \"${_tmp_dst_stage3}.sha256.verified\" --verify \"${_tmp_dst_stage3}.sha256\""
+	if [ "${?}" -ne 0 ]; then
+		exit_error "Usnable to verify ${_tmp_dst_stage3}.sha256 signature."
+		return 1
+	fi
+
+	return 0
+}

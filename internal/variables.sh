@@ -11,9 +11,9 @@ custom_dir() {
   echo "${MASHTOO_DIR}/custom"
 }
 
-tmp_dir() {
-  echo "${MASHTOO_DIR}/tmp"
-}
+	tmp_dir() {
+	  echo "${MASHTOO_DIR}/tmp"
+	}
 
 tpl_dir() {
   echo "${MASHTOO_DIR}/templates"

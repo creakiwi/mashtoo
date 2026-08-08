@@ -88,5 +88,5 @@ download() {
   fi
 
   echo_info "Downloading ${FBOLD}${SOURCE}${FBOLD_OFF} to ${FBOLD}${DESTINATION}${FBOLD_OFF}..."
-  run "wget -q --show-progress -O ${DESTINATION} ${SOURCE}"
+  run "wget -q --show-progress -O \"${DESTINATION}\" \"${SOURCE}\""
 }
