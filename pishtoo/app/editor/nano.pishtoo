@@ -1,0 +1,42 @@
+#!/bin/sh
+## DESCRIPTION: Small, friendly text editor
+
+pkg_install_nano_gentoo() {
+    run "emerge app-editors/nano"
+}
+
+pkg_install_nano_debian() {
+    run "apt-get install -y nano"
+}
+
+# Example: Source installation fallback
+pkg_install_nano_source() {
+    local version=${1:-7.2}
+    run "wget https://www.nano-editor.org/dist/v7/nano-${version}.tar.xz"
+    run "tar -xf nano-${version}.tar.xz"
+    run "cd nano-${version} && ./configure && make && make install"
+}
+
+pkg_uninstall_nano_gentoo() {
+    run "emerge -C app-editors/nano"
+}
+
+pkg_uninstall_nano_debian() {
+    run "apt-get remove -y nano"
+}
+
+# Example of manual version definition using the helper
+pkg_versions_nano_debian() {
+    # It's called 'nano' on debian, so we can use the helper
+    _pishtoo_versions_debian "nano"
+}
+
+pkg_versions_nano_gentoo() {
+    # It's called 'app-editors/nano' on gentoo
+    _pishtoo_versions_gentoo "app-editors/nano"
+}
+
+# Source versions using GitHub helper (nano mirror)
+pkg_versions_nano_source() {
+    _pishtoo_versions_github "https://git.savannah.gnu.org/git/nano.git"
+}

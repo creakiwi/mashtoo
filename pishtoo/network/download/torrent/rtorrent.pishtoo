@@ -1,0 +1,22 @@
+#!/bin/sh
+## DESCRIPTION: command line torrent
+
+pkg_install_rtorrent() {
+    echo "Installing rtorrent (generic fallback)..."
+}
+
+pkg_install_rtorrent_gentoo() {
+    echo "emerge rtorrent"
+}
+
+pkg_install_rtorrent_debian() {
+    echo "apt-get install rtorrent"
+}
+
+pkg_uninstall_rtorrent_gentoo() {
+    echo "emerge -C rtorrent"
+}
+
+pkg_uninstall_rtorrent_debian() {
+    echo "apt-get remove -y rtorrent"
+}

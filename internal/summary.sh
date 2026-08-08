@@ -3,9 +3,12 @@
 summary() {
   title "Configured parameters"
   echo -e "Device: ${FCYELLOW}${USB_DEVICE}${FCDEF}"
+  echo -e "Target device: ${FCYELLOW}${INSTALL_DEVICE}${FCDEF}"
   echo -e "Arch: ${FCBLUE}${ARCH}${FCDEF}"
   echo -e "Microarch: ${FCBLUE}${MICROARCH}${FCDEF}"
   echo -e "Distribution: ${FCBLUE}${DIST}${FCDEF}"
+  echo -e "Profile: ${FCBLUE}${PROFILE}${FCDEF}"
+  echo -e "Library profile: ${FCBLUE}${LIB_PROFILE}${FCDEF}"
   echo -e "Version: ${FCBLUE}${VERSION}${FCDEF}"
   if [ "${NETINST}" = "1" ]
   then

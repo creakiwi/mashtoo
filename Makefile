@@ -31,7 +31,16 @@ help: ## Display this help
 list-targets: ## List available targets.env.gentoo-amd64-m710q-alexception
 	ls env.d -A1
 
-init-target: ## Usage: make init TARGET=env.d/.env.gentoo-amd64-m710q-alexception
+
+linter-shellcheck: ## Lint project through shellcheck utility
+	find ./internal -type f -name "*.sh" -exec shellcheck -s sh {} +
+
+linter-checkbashisms: ## Lint project through checkbashisms utility
+	find ./internal -type f -name "*.sh" -exec checkbashisms {} +
+
+linter: # linter-shellcheck linter-checkbashisms ## Lint project
+
+init-target: linter ## Usage: make init TARGET=env.d/.env.gentoo-amd64-m710q-alexception
 	echo "Environment configuration for $(LBLUE)$(TARGET)$(NC)..."
 	if ! [ -f "$(TARGET)" ] ; then \
 		echo "$(RED)[KO]$(NC) file $(LBLUE)$(TARGET)$(NC) does not exist." ; \
@@ -63,3 +72,7 @@ init-target: ## Usage: make init TARGET=env.d/.env.gentoo-amd64-m710q-alexceptio
 
 bootable-key: init-target ## Create bootable key
 	./bootable_key.sh
+
+#clean:
+#	rm -rf ./mnt/initramfs/*
+#	touch ./mnt/initramfs/.gitkeep

@@ -29,5 +29,5 @@ reprap() {
 	run "cp -R ${MASHTOO_SRC_DIR}/internal ${MASHTOO_DST}"
 	run "cp -R ${MASHTOO_SRC_DIR}/templates ${MASHTOO_DST}"
 	run "find ${MASHTOO_SRC_DIR} -maxdepth 1 -type f -exec cp {} ${MASHTOO_DST} \;"
-	run "ln -s ${MASHTOO_DST}/mashtoo.sh /usr/local/sbin/mashtoo"
+	run "ln -s /opt/mashtoo/mashtoo.sh ${INITRAMFS_EXTRACT_POINT}/usr/local/sbin/mashtoo"
 }

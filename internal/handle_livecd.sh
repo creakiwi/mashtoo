@@ -43,7 +43,7 @@ handle_livecd() {
   copy_files_to_initramfs
   live_in_initramfs
 
-  reprap ${INITRAMFS_EXTRACT_POINT}/opt/
+  reprap ${INITRAMFS_EXTRACT_POINT}/opt
 
   if command -v repack_initramfs_${DIST} >/dev/null 2>&1
   then

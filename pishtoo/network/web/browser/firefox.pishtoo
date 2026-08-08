@@ -1,0 +1,18 @@
+#!/bin/sh
+## DESCRIPTION: Web browser from Mozilla
+
+pkg_install_firefox_gentoo() {
+    run "emerge www-client/firefox"
+}
+
+pkg_install_firefox_debian() {
+    run "apt-get update && apt-get install -y firefox-esr"
+}
+
+pkg_uninstall_firefox_gentoo() {
+    run "emerge -C www-client/firefox"
+}
+
+pkg_uninstall_firefox_debian() {
+    run "apt-get remove -y firefox-esr"
+}

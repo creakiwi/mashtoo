@@ -192,7 +192,7 @@ extract_iso_xorriso() {
 	local ISO_FILE=${1}
 	local EXTRACT_DIR=${2}
 
-  run "xorriso -osirrox on -indev ${ISO_FILE} -extract / ${EXTRACT_DIR}"
+  run_quiet "xorriso -osirrox on -indev ${ISO_FILE} -extract / ${EXTRACT_DIR}"
 }
 
 # usage: extract_iso_bsdtar: <iso_file>(string) <extract_dir>(string)
@@ -219,7 +219,7 @@ extract_boot_info() {
   local ISO_FILE=${1}
   local EXTRACT_NAME=${2}
 
-  run "xorriso -indev ${ISO_FILE} -report_el_torito as_mkisofs > ${EXTRACT_NAME}"
+  run_quiet "xorriso -indev ${ISO_FILE} -report_el_torito as_mkisofs > ${EXTRACT_NAME}"
 }
 
 ## /desc Extract a SquashFS filesystem
@@ -231,7 +231,7 @@ extract_squashfs() {
   local SQUASHFS_FILE=${1}
   local EXTRACT_DIR=${2}
 
-  run "unsquashfs -d ${EXTRACT_DIR} ${SQUASHFS_FILE}"
+  run "unsquashfs -q -d ${EXTRACT_DIR} ${SQUASHFS_FILE}"
 }
 
 ## /desc Create/recreate a SquashFS filesystem from directory
@@ -250,7 +250,7 @@ repack_squashfs() {
     OPTIONS=" ${3}"
   fi
 
-  run "mksquashfs ${DIRECTORY} ${SQUASHFS_FILE}${OPTIONS}"
+  run_quiet "mksquashfs ${DIRECTORY} ${SQUASHFS_FILE}${OPTIONS}"
 }
 
 ## /desc Unimplemented
@@ -275,7 +275,7 @@ repack_iso_xorriso_from_report() {
   fi
 
   REPORT_CONTENT=$(tr '\n' ' ' < "$REPORT_FILE")
-  run "xorriso -as mkisofs ${REPORT_CONTENT} -o ${OUTPUT_ISO} ${EXTRACT_DIR}"
+  run_quiet "xorriso -as mkisofs ${REPORT_CONTENT} -o ${OUTPUT_ISO} ${EXTRACT_DIR}"
 }
 
 ## /desc Copy an ISO file to a drive

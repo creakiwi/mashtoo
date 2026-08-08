@@ -41,9 +41,11 @@ log() {
 	local _CLEANED_MESSAGE=$(printf "%s" "${_MESSAGE}" | sed -E 's/(\x1B|\033)\[[0-9;]*[mK]//g' | sed -E 's/\\e\[[0-9;]*[a-zA-Z]//g')
 
 	if [ ${_MESSAGE_LOG_LEVEL} -le ${_CURRENT_LOG_LEVEL} ]; then
-		echo "[${_LEVEL}] ${_CLEANED_MESSAGE}" >> "/tmp/mashtoo.log"
+		echo "[${_LEVEL}] ${_CLEANED_MESSAGE}" >> "./tmp/mashtoo.log"
 	fi
-	echo "[${_LEVEL}] ${_CLEANED_MESSAGE}" >> "/tmp/mashtoo_debug.log"
+	if [ "${DEBUG}" -eq 1 ]; then
+		echo "[${_LEVEL}] ${_CLEANED_MESSAGE}" >> "./tmp/mashtoo_debug.log"
+	fi
 }
 
 ## /desc Log message with INFO level

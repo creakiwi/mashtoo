@@ -1,0 +1,18 @@
+#!/bin/sh
+## DESCRIPTION: Vi IMproved, a programmer's text editor
+
+pkg_install_vim_gentoo() {
+    run "emerge app-editors/vim"
+}
+
+pkg_install_vim_debian() {
+    run "apt-get install -y vim"
+}
+
+pkg_uninstall_vim_gentoo() {
+    run "emerge -C app-editors/vim"
+}
+
+pkg_uninstall_vim_debian() {
+    run "apt-get remove -y vim"
+}

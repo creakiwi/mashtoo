@@ -1,0 +1,5 @@
+#!/bin/sh
+
+. /lib/gentoo/functions.sh
+
+/usr/local/sbin/mashtoo-installer
