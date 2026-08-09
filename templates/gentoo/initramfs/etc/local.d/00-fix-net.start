@@ -1,0 +1,7 @@
+#!/bin/sh
+
+sed -i '/config_eth/d' /etc/conf.d/net
+
+if ! grep -q 'config_all_interfaces="dhcp"' /etc/conf.d/net; then
+    echo 'config_all_interfaces="dhcp"' >> /etc/conf.d/net
+fi

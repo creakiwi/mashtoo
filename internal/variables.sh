@@ -19,6 +19,10 @@ tpl_dir() {
   echo "${MASHTOO_DIR}/templates"
 }
 
+logs_dir() {
+	echo "${MASHTOO_DIR}/logs"
+}
+
 secrets_dir() {
   echo "${MASHTOO_DIR}/secrets"
 }

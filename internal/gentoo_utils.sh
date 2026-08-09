@@ -4,7 +4,8 @@ ensure_network() {
 	local TPL_INITRAMFS_DIR="$(tpl_dir)/gentoo/initramfs"
 
 	run "mkdir -p ${ROOT_DIR}/etc/runlevels/default"
-	run "cp -f ${TPL_INITRAMFS_DIR}/etc/conf.d/net ${ROOT_DIR}/net"
+	run "cp -f ${TPL_INITRAMFS_DIR}/etc/conf.d/net ${ROOT_DIR}/etc/conf.d/net"
+	run "cp -f ${TPL_INITRAMFS_DIR}/etc/local.d/00-fix-net.start ${ROOT_DIR}/etc/local.d/"
 	run "ln -sf ${ROOT_DIR}/etc/init.d/net.lo ${ROOT_DIR}/etc/runlevels/default/net.lo"
 }
 
@@ -30,8 +31,8 @@ ssh_at_boot() {
 	run "ln -sf /etc/init.d/local ${ROOT_DIR}/etc/runlevels/default/local"
 
 	run "mkdir -p ${ROOT_DIR}/etc/local.d"
-	run "cp -f ${TPL_INITRAMFS_DIR}/etc/local.d/00-sshd.start ${ROOT_DIR}/etc/local.d/"
-	run "chmod +x ${ROOT_DIR}/etc/local.d/00-sshd.start"
+	run "cp -f ${TPL_INITRAMFS_DIR}/etc/local.d/01-sshd.start ${ROOT_DIR}/etc/local.d/"
+	#run "chmod +x ${ROOT_DIR}/etc/local.d/01-sshd.start"
 
 	# Allow root login by ssh keys
 	# run "sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' ${ROOT_DIR}/etc/ssh/sshd_config"
@@ -60,6 +61,15 @@ mashtoo_installer_at_startup() {
 	run "chmod +x ${ROOT_DIR}/etc/local.d/10-mashtoo-installer.start"
 }
 
+get_mirrors_list() {
+    #r_get_mirrors_list=$(curl -s https://api.gentoo.org/mirrors/distfiles.xml | sed -n 's|.*<uri[^>]*>\(.*\)</uri>.*|\1|p')
+    # ignore gtp/rsync
+    echo_warn "Ignore rsync:// and ftp:// as download command only use wget or curl."
+	r_get_mirrors_list=$(curl -s https://api.gentoo.org/mirrors/distfiles.xml | sed -n 's|.*<uri[^>]*>\(https\?://.*\)</uri>.*|\1|p')
+
+    return 0
+}
+
 mirrors_select() {
     check_arguments "${#}" 0 "mirrors_select [max](int)"
 
@@ -68,15 +78,15 @@ mirrors_select() {
        _max="${1}"
     fi
 
+	r_mirrors_select=""
 	_proxies_file="$(tmp_dir)/${DIST}_proxies"
 
-#	if [ -f "${_proxies_file}" ]; then
-	if [ 1 -eq 0 ]; then
+	if [ -n "$(find "${_proxies_file}" -mtime -1 2>/dev/null)" ]; then
 		echo_info "Getting best proxy from cache"
+		r_mirrors_select=$(cat "${_proxies_file}"  | head -n "$_max")
 	else
 		get_mirrors_list
 		_mirrors="${r_get_mirrors_list}"
-
 		# Get the total number of mirrors securely in POSIX
 		set -- $_mirrors
 		_total=$#
@@ -85,7 +95,7 @@ mirrors_select() {
 		i=0
 	    echo_info "Testing $_total mirrors (this may take a few minutes)..." >&2
 
-		r_mirrors_select=$(
+		_all_mirrors_select=$(
 			{
 				for url in $_mirrors; do
 					i=$((i + 1))
@@ -111,28 +121,46 @@ mirrors_select() {
 				# Add a final newline to stderr to clean up the terminal after the loop
 				echo "" >&2
 
-			# 5. Sort numerically, keep the top $_max results, and extract ONLY the URL (column 2)
-			} | sort -n | head -n "$_max" | awk '{print $2}'
+			} | sort -n
 		)
 
-		echo "${r_mirrors_select}" > "${_proxies_file}"
+		echo "${_all_mirrors_select}" | awk '{print $2}' |  tr -s '[:blank:]' '\n' > "${_proxies_file}"
+			# 6. keep the top $_max results, and extract ONLY the URL (column 2)
+		r_mirrors_select="${_all_mirrors_select}" | head -n "$_max" | awk '{print $2}'
 	fi
 
 
     return 0
 }
 
-get_mirrors_list() {
-    #r_get_mirrors_list=$(curl -s https://api.gentoo.org/mirrors/distfiles.xml | sed -n 's|.*<uri[^>]*>\(.*\)</uri>.*|\1|p')
-    # ignore gtp/rsync
-    echo_warn "Ignore rsync:// and ftp:// as download command only use wget or curl."
-	r_get_mirrors_list=$(curl -s https://api.gentoo.org/mirrors/distfiles.xml | sed -n 's|.*<uri[^>]*>\(https\?://.*\)</uri>.*|\1|p')
 
-    return 0
+verify_stage3_signature() {
+	check_arguments "${#}" "1" "verify_signatures <stage3_path>(string)"
+	_stage3_path="${1}"
+
+	echo_ok "Verify Stage3 signatures"
+
+	run "rm $(tmp_dir)/*.verified"
+	run "gpg --keyserver hkps://keys.gentoo.org --recv-keys 13EBBDBEDE7A12775DFDB1BABB572E0E2D182910"
+	run "gpg --verify \"${_stage3_path}.asc\" \"${_stage3_path}\""
+	if [ "${?}" -ne 0 ]; then
+		exit_error "Unable to verify ${_stage3_path} signature."
+	fi
+
+	run "gpg --output \"${_stage3_path}.DIGESTS.verified\" --verify \"${_stage3_path}.DIGESTS\""
+	if [ "${?}" -ne 0 ]; then
+		exit_error "Unable to verify ${_stage3_path}.DIGESTS signature."
+	fi
+
+	run "gpg --output \"${_stage3_path}.sha256.verified\" --verify \"${_stage3_path}.sha256\""
+	if [ "${?}" -ne 0 ]; then
+		exit_error "Usnable to verify ${_stage3_path}.sha256 signature."
+	fi
+
+	return 0
 }
 
-download_stage3()
-{
+download_stage3() {
 	check_arguments "${#}" "1" "mashtoo_installer_at_startup <initramfs_root_dir>(string)"
 	_initramfs_root_dir="${1}"
 
@@ -155,60 +183,31 @@ download_stage3()
 	_stage3_path=$(curl -sSL "$_full_stage3_txt" | awk '/^[0-9].*\.tar\.xz/ {print $1}')
 	_stage3_filename="${_stage3_path##*/}"
 	_full_stage3_file="${_base_url}${_stage3_path}"
-	_tmp_dst_stage3="$(tmp_dir)/${_stage3_filename}"
+	_stage3_path="$(tmp_dir)/${_stage3_filename}"
 
-	if [ ! -f "${_tmp_dst_stage3}" ] \
-		|| [ ! -f "${_tmp_dst_stage3}.CONTENTS.gz" ] \
-		|| [ ! -f "${_tmp_dst_stage3}.DIGESTS" ] \
-		|| [ ! -f "${_tmp_dst_stage3}.asc" ] \
-		|| [ ! -f "${_tmp_dst_stage3}.sha256" ]; then
-		download "${_full_stage3_file}" "${_tmp_dst_stage3}"
-		download "${_full_stage3_file}.CONTENTS.gz" "${_tmp_dst_stage3}.CONTENTS.gz"
-		download "${_full_stage3_file}.DIGESTS" "${_tmp_dst_stage3}.DIGESTS"
-		download "${_full_stage3_file}.asc" "${_tmp_dst_stage3}.asc"
-		download "${_full_stage3_file}.sha256" "${_tmp_dst_stage3}.sha256"
+	if [ ! -f "${_stage3_path}" ] \
+		|| [ ! -f "${_stage3_path}.CONTENTS.gz" ] \
+		|| [ ! -f "${_stage3_path}.DIGESTS" ] \
+		|| [ ! -f "${_stage3_path}.asc" ] \
+		|| [ ! -f "${_stage3_path}.sha256" ]; then
+		download "${_full_stage3_file}" "${_stage3_path}"
+		download "${_full_stage3_file}.CONTENTS.gz" "${_stage3_path}.CONTENTS.gz"
+		download "${_full_stage3_file}.DIGESTS" "${_stage3_path}.DIGESTS"
+		download "${_full_stage3_file}.asc" "${_stage3_path}.asc"
+		download "${_full_stage3_file}.sha256" "${_stage3_path}.sha256"
 	else
 		echo_ok "${_stage3_path} and verification files already downloaded"
 	fi
 
-	verify_stage3_signature "${_tmp_dst_stage3}"
+	verify_stage3_signature "${_stage3_path}"
 
 	echo_ok "Copying stage3 files to initramfs"
-	_initramfs_dst_stage3="${_initramfs_root_dir}/${_stage3_filename}"
-	run "cp ${_tmp_dst_stage3} ${_initramfs_dst_stage3}"
-	run "cp ${_tmp_dst_stage3}.CONTENTS.gz ${_initramfs_dst_stage3}.CONTENTS.gz"
-	run "cp ${_tmp_dst_stage3}.DIGESTS ${_initramfs_dst_stage3}.DIGESTS"
-	run "cp ${_tmp_dst_stage3}.DIGESTS.verified ${_initramfs_dst_stage3}.DIGESTS.verified"
-	run "cp ${_tmp_dst_stage3}.asc ${_initramfs_dst_stage3}.asc"
-	run "cp ${_tmp_dst_stage3}.sha256 ${_initramfs_dst_stage3}.sha256"
-	run "cp ${_tmp_dst_stage3}.sha256.verified ${_initramfs_dst_stage3}.sha256.verified"
-}
-
-verify_stage3_signature() {
-	check_arguments "${#}" "1" "verify_signatures <tmp_stage3_path>(string)"
-	_tmp_dst_stage3="${1}"
-
-	echo_ok "Verify Stage3 signatures"
-
-	run "rm $(tmp_dir)/*.verified"
-	run "gpg --keyserver hkps://keys.gentoo.org --recv-keys 13EBBDBEDE7A12775DFDB1BABB572E0E2D182910"
-	run "gpg --verify \"${_tmp_dst_stage3}.asc\" \"${_tmp_dst_stage3}\""
-	if [ "${?}" -ne 0 ]; then
-		exit_error "Unable to verify ${_tmp_dst_stage3} signature."
-		return 1
-	fi
-
-	run "gpg --output \"${_tmp_dst_stage3}.DIGESTS.verified\" --verify \"${_tmp_dst_stage3}.DIGESTS\""
-	if [ "${?}" -ne 0 ]; then
-		exit_error "Unable to verify ${_tmp_dst_stage3}.DIGESTS signature."
-		return 1
-	fi
-
-	run "gpg --output \"${_tmp_dst_stage3}.sha256.verified\" --verify \"${_tmp_dst_stage3}.sha256\""
-	if [ "${?}" -ne 0 ]; then
-		exit_error "Usnable to verify ${_tmp_dst_stage3}.sha256 signature."
-		return 1
-	fi
-
-	return 0
+	_initramfs_dst_stage3="${_initramfs_root_dir}/mnt/gentoo/${_stage3_filename}"
+	run "cp ${_stage3_path} ${_initramfs_dst_stage3}"
+	run "cp ${_stage3_path}.CONTENTS.gz ${_initramfs_dst_stage3}.CONTENTS.gz"
+	run "cp ${_stage3_path}.DIGESTS ${_initramfs_dst_stage3}.DIGESTS"
+	run "cp ${_stage3_path}.DIGESTS.verified ${_initramfs_dst_stage3}.DIGESTS.verified"
+	run "cp ${_stage3_path}.asc ${_initramfs_dst_stage3}.asc"
+	run "cp ${_stage3_path}.sha256 ${_initramfs_dst_stage3}.sha256"
+	run "cp ${_stage3_path}.sha256.verified ${_initramfs_dst_stage3}.sha256.verified"
 }

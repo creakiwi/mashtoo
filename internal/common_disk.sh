@@ -90,7 +90,7 @@ partitions_create() {
   file_substitute_variables "${_PARTITION_FILE}" | sfdisk ${INSTALL_DEVICE}
 
   if command_exists "partitions_create_make_filesystem"; then
-    partitions_create_make_filesystem
+    partitions_create_make_filesystem "${INSTALL_DEVICE}"
   fi
 }
 
