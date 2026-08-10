@@ -1,0 +1,230 @@
+#!/bin/sh
+#### ANY-WARE LICENSE
+#
+## REVISIONS
+# Source: https://github.com/alex-ception/any-ware-license
+# Revision: commit 4e4298da2878b0f7cb6c09a409555b3bfc52edb1
+#
+# **/!\ WARNING /!\**
+#
+# **This is not the BEER-WARE LICENSE but an adaptation of it**
+#
+# This file is the seal of approval that you can use the thing where this file is included in any way you want.
+#
+# If we meet someday and you think this thing is worth it, you can offer me a [gift] in return.
+#
+## HOW TO INCLUDE IT IN YOUR PROJECT
+# If you want to use this license in your project, you HAVE to create a file called gift.license containing a gift or a set of gifts you would like to be offered.
+#
+# - Just one gift: beer
+#- A proposal of gifts to choose in, a beer or a llama: beer | llama
+# - A set of gifts, a beer and a llama: beer & llama
+# - A more complex set with priorities, a beer and a lama or a mojito and cigarette or food: ( beer & llama ) | ( mojito & ( cigarette | food ) )
+set -eu
+exec > /dev/console 2>&1
+
+set +u
+if [ -f /lib/gentoo/functions.sh ]; then
+    . /lib/gentoo/functions.sh
+elif [ -f /sbin/functions.sh ]; then
+    . /sbin/functions.sh
+fi
+set -u
+
+MASHTOO_DIR="/opt/mashtoo"
+
+export PATH="${PATH}:/usr/libexec/rc/bin"
+
+. "${MASHTOO_DIR}/.env"
+. "${MASHTOO_DIR}/mashtoo.sh"
+
+einfo "Gentoo version of mashtoo-installer"
+einfo "Author Alex Ception <alexandre@creakiwi.com>[https://github.com/alex-ception]"
+
+ebegin "Force locale"
+loadkeys "${LOCALE_KEYMAP}"
+eend "$?"
+
+partitions_create_make_filesystem() {
+einfo "Gentoo version of mashtoo-installer 0"
+	check_arguments $# 1 "partitions_create_make_filesystem <disk_device>(string)"
+  local _DISK="${1}"
+  local _PART_PREFIX=""
+
+  case "${_DISK}" in
+    *[0-9])
+      _PART_PREFIX="${_DISK}p"
+      ;;
+    *)
+      _PART_PREFIX="${_DISK}"
+      ;;
+  esac
+
+	_boot_part="${_PART_PREFIX}1"
+	_swap_part="${_PART_PREFIX}2"
+	_main_part="${_PART_PREFIX}3"
+
+
+	make_filesystem "ext4" "${_boot_part}" "-F"
+  make_filesystem "swap" "${_swap_part}" "-f"
+  make_filesystem "ext4" "${_main_part}" "-F"
+
+	mkdir -p /mnt/gentoo
+	mkdir -p /mnt/gentoo/boot
+	mount "${_boot_part}" /mnt/gentoo
+	mount "${_main_part}" /mnt/gentoo/boot
+}
+
+summary
+run_chronyd
+partitions_create
+
+cd /mnt/gentoo
+tar xpvf /stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner -C /mnt/gentoo
+
+# http://gcc.gnu.org/gcc-4.5/changes.html
+# https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
+
+cp --dereference /etc/resolv.conf /mnt/gentoo/etc/
+mount --types proc /proc /mnt/gentoo/proc
+mount --rbind /sys /mnt/gentoo/sys
+mount --make-rslave /mnt/gentoo/sys
+mount --rbind /dev /mnt/gentoo/dev
+mount --make-rslave /mnt/gentoo/dev
+mount --bind /run /mnt/gentoo/run
+mount --make-slave /mnt/gentoo/run
+
+chroot /mnt/gentoo /bin/bash
+source /etc/profile
+export PS1="(chroot) ${PS1}"
+
+oemerge-webrsync
+
+emerge --ask --verbose --oneshot app-portage/mirrorselect
+mirrorselect -i -o >> /etc/portage/make.conf
+
+emerge --sync
+
+eselect profile list
+make.conf
+<<<
+COMMON_FLAGS="-O2 -march=atom -pipe"
+CFLAGS="${COMMON_FLAGS}"
+CXXFLAGS="${COMMON_FLAGS}"
+FCFLAGS="${COMMON_FLAGS}"
+FFLAGS="${COMMON_FLAGS}"
+RUSTFLAGS="${RUSTFLAGS} -C target-cpu=native"
+
+# NOTE: This stage was built with the bindist USE flag enabled
+
+# This sets the language of build output to English.
+# Please keep this setting intact when reporting bugs.
+LC_MESSAGES=C.UTF-8
+
+MAKEOPTS="-j2 -l2"
+EMERGE_DEFAULT_OPTS="--jobs=1 --load-average=2"
+PORTAGE_TMPDIR="/var/tmp"
+
+GENTOO_MIRRORS="https://fr.mirrors.cicku.me/gentoo/ \
+    http://fr.mirrors.cicku.me/gentoo/ \
+    ftp://ftp.free.fr/mirrors/ftp.gentoo.org/ \
+    http://ftp.free.fr/mirrors/ftp.gentoo.org/ \
+    http://mirrors.ircam.fr/pub/gentoo-distfiles/ \
+    https://mirrors.ircam.fr/pub/gentoo-distfiles/ \
+    rsync://mirrors.ircam.fr/pub/gentoo-distfiles/ \
+    https://nereid.fr.ext.planetunix.net/pub/gentoo/ \
+    http://nereid.fr.ext.planetunix.net/pub/gentoo/ \
+    ftp://nereid.fr.ext.planetunix.net/pub/gentoo/ \
+    rsync://nereid.fr.ext.planetunix.net/gentoo/ \
+    https://mirrors.soeasyto.com/distfiles.gentoo.org/ \
+    http://mirrors.soeasyto.com/distfiles.gentoo.org/ \
+    ftp://mirrors.soeasyto.com/distfiles.gentoo.org/"
+
+USE="-alsa -bluetooth -cups -gnome -gtk -kde -pipewire -pulseaudio -qt -wayland -X ipv6 ssl threads"
+INPUT_DEVICES=""
+VIDEO_CARDS="none"
+
+CPU_FLAGS_X86="mmx mmxext sse sse2 sse3 ssse3"
+
+ACCEPT_LICENSE="-* @FREE @BINARY-REDISTRIBUTABLE"
+
+>>>
+openssh
+fail2ban
+cron
+tmux
+screen
+
+emerge -pv --oneshot app-portage/cpuid2cpuflags
+emerge -v --oneshot app-portage/cpuid2cpuflags
+cpuid2cpuflags >> /etc/portage/make.conf #only for slow system
+#otherwise
+#echo "*/* $(cpuid2cpuflags)" > /etc/portage/package.use/00cpu-flags
+mkdir /etc/portage/package.license
+emerge --ask --verbose --update --deep --changed-use @world
+deep -D
+update -u
+
+changed-use -U
+newuse -N
+
+>>>RUN
+emerge -DuNp @world
+
+emerge --pc
+emerge -c
+
+ln -sf ../usr/share/zoneinfo/Europe/Paris /etc/localtime
+nano /etc/locale.gen
+
+locale-gen
+
+eselect locale list
+eselect locale set X
+env-update && source /etc/profile && export PS1="(chroot) ${PS1}"
+
+emerge -pv sys-kernel/gentoo-sources
+eselect kernel list
+
+make menuconfig
+make && make modules_install
+make install
+cp /usr/src/linux/.config /boot/
+
+e2label /dev/sda1 bootfs
+swaplabel -L swapfs /dev/sda2
+e2label /dev/sda3 rootfs
+/etc/fstab
+LABEL=bootfs	/boot	ext4	defaults		0 2
+LABEL=swapfs	none	swap	sw			0 0
+LABEL=rootfs	/	ext4	defaults,noatime	0 1
+
+passwd
+rc-update add sshd default
+rc-update add dhcpcd default
+
+echo tux > /etc/hostname
+
+nano /etc/conf.d/keymaps
+keymap="fr-latin9"
+fix_euro="yes"
+
+emerge -v metalog
+rc-update add metalog default
+
+emerge -v dcron
+crontab /etc/crontab
+rc-update add dcron default
+
+emerge -v app-shells/bash-completion
+
+emerge -v net-misc/chrony
+rc-update add chronyd default
+
+emerge -v sys-fs/dosfstools
+emerge -v sys-fs/ntfs3g
+emerge -v sys-block/io-scheduler-udev-rules
+
+emerge -v sys-boot/grub
+grub-install --target=i386-pc /dev/sda
+=

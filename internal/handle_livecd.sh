@@ -1,5 +1,6 @@
 copy_files_to_initramfs() {
-  run "cp -R $(custom_dir)/initramfs/. ${INITRAMFS_EXTRACT_POINT}/"
+  run "cp -R $(custom_generic_dir)/initramfs/. ${INITRAMFS_EXTRACT_POINT}/"
+  run "cp -R $(custom_dist_dir)/initramfs/. ${INITRAMFS_EXTRACT_POINT}/"
 }
 
 live_in_initramfs() {

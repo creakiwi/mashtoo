@@ -130,17 +130,20 @@ _make_filesystem_type_validate() {
 }
 
 make_filesystem() {
-  check_arguments $# 2 "make_filesystem <type>(string) <device>(string)"
+  check_arguments $# 2 "make_filesystem <type>(string) <device>(string) [options](string)"
   local _TYPE=$(lower ${1})
   local _DEVICE="${2}"
   local _OPTIONS=""
+  if [ "$#" -eq 3 ]; then
+  	_OPTIONS=" ${3}"
+  fi
   _make_filesystem_type_validate "${_TYPE}" 1
   if ! device_is_partition "${_DEVICE}"; then
     exit_error "Device ${_DEVICE} is not a partition."
   fi
 
   if [ "${_TYPE}" = "ext4" ] && [ "$(device_size "${_DEVICE}")" -lt $((2**33)) ]; then
-    _OPTIONS=" -T small"
+    _OPTIONS="${OPTIONS} -T small"
   fi
 
   case "${_TYPE}" in

@@ -4,27 +4,37 @@ download_dir() {
   echo "${MASHTOO_DIR}/downloads"
 }
 mount_dir() {
+
   echo "${MASHTOO_DIR}/mnt"
 }
 
-custom_dir() {
-  echo "${MASHTOO_DIR}/custom"
+custom_generic_dir() {
+  echo "${MASHTOO_DIR}/custom/generic"
 }
 
-	tmp_dir() {
-	  echo "${MASHTOO_DIR}/tmp"
-	}
+custom_dist_dir() {
+  echo "${MASHTOO_DIR}/custom/${DIST}"
+}
+
+tmp_dir() {
+	echo "${MASHTOO_DIR}/tmp"
+}
 
 tpl_dir() {
   echo "${MASHTOO_DIR}/templates"
 }
 
 logs_dir() {
-	echo "${MASHTOO_DIR}/logs"
+	echo "${MASHTOO_DIR}/tmp"
 }
 
 secrets_dir() {
   echo "${MASHTOO_DIR}/secrets"
+}
+
+cache_dir() {
+	mkdir -p "${MASHTOO_DIR}/cache"
+	echo "${MASHTOO_DIR}/cache"
 }
 
 extracted_iso_dir() {

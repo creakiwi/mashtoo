@@ -231,7 +231,7 @@ extract_squashfs() {
   local SQUASHFS_FILE=${1}
   local EXTRACT_DIR=${2}
 
-  run "unsquashfs -q -d ${EXTRACT_DIR} ${SQUASHFS_FILE}"
+  run "unsquashfs -f -q -d ${EXTRACT_DIR} ${SQUASHFS_FILE}"
 }
 
 ## /desc Create/recreate a SquashFS filesystem from directory
@@ -247,10 +247,10 @@ repack_squashfs() {
   OPTIONS=""
   if [ -n "${3}" ]
   then
-    OPTIONS=" ${3}"
+    OPTIONS="${OPTIONS} ${3}"
   fi
 
-  run_quiet "mksquashfs ${DIRECTORY} ${SQUASHFS_FILE}${OPTIONS}"
+  run "mksquashfs ${DIRECTORY} ${SQUASHFS_FILE}${OPTIONS}"
 }
 
 ## /desc Unimplemented

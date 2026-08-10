@@ -70,9 +70,13 @@ init-target: linter ## Usage: make init TARGET=env.d/.env.gentoo-amd64-m710q-ale
 		echo "$(GREEN)[OK]$(NC) Updated $(LBLUE).env$(NC) from $(LBLUE)$(TARGET)$(NC)." ; \
 	fi
 
-bootable-key: init-target ## Create bootable key
+bootable-key: init-target clean ## Create bootable key
 	./bootable_key.sh
 
-#clean:
-#	rm -rf ./mnt/initramfs/*
-#	touch ./mnt/initramfs/.gitkeep
+clean:
+	rm -rf ./mnt/initramfs/*
+	touch ./mnt/initramfs/.gitkeep
+	rm -rf ./mnt/livecd/*
+	touch ./mnt/livecd/.gitkeep
+	rm -rf ./tmp/*
+	touch ./tmp/.gitkeep

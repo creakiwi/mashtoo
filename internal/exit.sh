@@ -16,11 +16,11 @@ exit_llama() {
 ## /param [error_message] (string) The error message
 ## /param [error_code] (integer) The error code
 exit_error() {
-	if [ "${#}" -eq 1 ]; then
+	if [ "$#" -eq 1 ]; then
 		echo_ko "${1}"
 	fi
 
-	if [ "${#}" -ge 1 ]; then
+	if [ "$#" -ge 1 ]; then
 		exit ${2}
 	fi
 
@@ -32,7 +32,7 @@ exit_error() {
 ## /param [warn_message] (string) The warning message
 ## /param [warn_code] (integer) The warning code
 exit_warn() {
-	if [ ${#} -eq 1 ]
+	if [ "$#" -eq 1 ]
 	then
 		echo_warn "${2}"
 	fi
@@ -56,7 +56,7 @@ exit_success() {
 ## /param <given> (integer|string) The given value
 ## /param <expected (integer|string) The expected value
 equals_or_exit() {
-	check_arguments ${#} 2 "equals_or_exit <given>(integer|string) <expected>(integer|string)"
+	check_arguments $# 2 "equals_or_exit <given>(integer|string) <expected>(integer|string)"
 	local _GIVEN=${1}
 	local _EXPECTED=${2}
 	local _VALID=1

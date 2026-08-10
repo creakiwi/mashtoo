@@ -85,7 +85,12 @@ extract_initramfs_gentoo() {
 
 repack_initramfs_gentoo() {
   local INITRAMFS_SQUASH_FILE="${LIVECD_EXTRACT_POINT}/image.squashfs"
+  #echo_warn "We don't want this shitty NetworkManager on gentoo"
+  #run "rm -f $(mount_dir)/initramfs/etc/runlevels/default/NetworkManager"
 
+	_compression="xz"
+	#_compression="zstd"
   echo_todo "Assuming XZ compression, verify compression with unsquashfs -s ${INITRAMFS_SQUASH_FILE}"
-  repack_squashfs "${INITRAMFS_EXTRACT_POINT}" "${INITRAMFS_SQUASH_FILE}" "-comp xz -noappend"
+  echo_warn "Use ${_compression} algorithm"
+  repack_squashfs "${INITRAMFS_EXTRACT_POINT}" "${INITRAMFS_SQUASH_FILE}" "-comp ${_compression} -noappend -processors $(nproc)"
 }

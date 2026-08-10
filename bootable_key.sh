@@ -8,7 +8,7 @@ MASHTOO_DIR="."
 
 live_in_initramfs_callback_gentoo() {
   set_locale "${LOCALE_KEYMAP}" "${LOCALE_LANG}" "${INITRAMFS_EXTRACT_POINT}"
-  ssh_at_boot "${INITRAMFS_EXTRACT_POINT}"
+  #ssh_at_boot "${INITRAMFS_EXTRACT_POINT}"
   download_stage3 "${INITRAMFS_EXTRACT_POINT}"
   mashtoo_installer_at_startup "${INITRAMFS_EXTRACT_POINT}"
 }
