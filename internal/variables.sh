@@ -42,23 +42,21 @@ extracted_iso_dir() {
 }
 
 livecd_name() {
-  local LIVECD_NAME=livecd-${DIST}-${ARCH}-${VERSION}
-  if [ ${NETINST} -eq 1 ]
-  then
-    local LIVECD_NAME=livecd-${DIST}-${ARCH}-${VERSION}-netinstall
+  local LIVECD_NAME="livecd-${DIST}-${ARCH}-${VERSION}"
+  if [ "${NETINST:-0}" -eq 1 ]; then
+    LIVECD_NAME="livecd-${DIST}-${ARCH}-${VERSION}-netinstall"
   fi
 
-  echo ${LIVECD_NAME}
+  echo "${LIVECD_NAME}"
 }
 
 livecd_iso() {
-  local LIVECD_ISO=livecd-${DIST}-${ARCH}-${VERSION}.iso
-  if [ ${NETINST} -eq 1 ]
-  then
-    local LIVECD_ISO=livecd-${DIST}-${ARCH}-${VERSION}-netinstall.iso
+  local LIVECD_ISO="livecd-${DIST}-${ARCH}-${VERSION}.iso"
+  if [ "${NETINST:-0}" -eq 1 ]; then
+    LIVECD_ISO="livecd-${DIST}-${ARCH}-${VERSION}-netinstall.iso"
   fi
 
-  echo ${LIVECD_ISO}
+  echo "${LIVECD_ISO}"
 }
 
 livecd_iso_path() {

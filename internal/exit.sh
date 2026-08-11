@@ -20,8 +20,8 @@ exit_error() {
 		echo_ko "${1}"
 	fi
 
-	if [ "$#" -ge 1 ]; then
-		exit ${2}
+	if [ "${#}" -gt 1 ]; then
+		exit "${2}"
 	fi
 
   exit 1

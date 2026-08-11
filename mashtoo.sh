@@ -1,9 +1,8 @@
 #!/bin/sh
 
-if [ -z ${MASHTOO_DIR} ]
-then
+if [ -z "${MASHTOO_DIR:-}" ]; then
   echo "You must define MASHTOO_DIR variable (ex: MASHTOO_DIR=\"/usr/local/sbin/mashtoo\")"
-  exit
+  exit 1
 fi
 
-. ${MASHTOO_DIR}/internal/includes.sh
+. "${MASHTOO_DIR}/internal/includes.sh"

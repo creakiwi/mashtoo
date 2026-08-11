@@ -1,8 +1,7 @@
 #!/bin/sh
 
-download_dist_debian()
-{
-  case ${ARCH} in
+download_dist_debian() {
+  case "${ARCH}" in
     # CPU 64
     amd64|x86_64)
       DEFINED_ARCH="amd64"
@@ -20,41 +19,45 @@ download_dist_debian()
       ;;
   esac
 
-  local BASE_URL="https://debian.osuosl.org/debian-cdimage/"
-  wget --spider -q "${BASE_URL}${VERSION}/"
-  if [ "${?}" -ne 0 ]
-  then
+  _base_url="https://debian.osuosl.org/debian-cdimage/"
+  if ! wget --spider -q "${_base_url}${VERSION}/"; then
     echo_warn "Unknown 'version ${FBOLD}${VERSION}${FBOLD_OFF}' for distribution '${FBOLD}${DIST}${FBOLD_OFF}'"
     echo_info "Use version '${FBOLD}current${FBOLD_OFF}' instead of '${FBOLD}${VERSION}${FBOLD_OFF}'"
     VERSION='current'
   fi
 
-  BASE_URL="${BASE_URL}${VERSION}/${ARCH}/"
-  if [ ${NETINST} -eq 1 ]
-  then
-    BASE_URL="${BASE_URL}iso-cd/"
+  _base_url="${_base_url}${VERSION}/${ARCH}/"
+  if [ "${NETINST:-0}" -eq 1 ]; then
+    _base_url="${_base_url}iso-cd/"
   else
-    BASE_URL="${BASE_URL}iso-dvd/"
+    _base_url="${_base_url}iso-dvd/"
   fi
 
-  SHA512SUMS="${BASE_URL}SHA512SUMS"
+  _sha512sums="${_base_url}SHA512SUMS"
 
-  local ISO_URL=$(wget -q -O - "${SHA512SUMS}" | head -n 1 | awk '{print $2}')
-  local ISO_URL_PATH="${BASE_URL}${ISO_URL}"
-  download "${ISO_URL_PATH}" "`livecd_iso_path`"
+  _iso_url=$(wget -q -O - "${_sha512sums}" | head -n 1 | awk '{print $2}')
+  _iso_url_path="${_base_url}${_iso_url}"
+  _target_iso="$(livecd_iso_path)"
+  
+  download "${_iso_url_path}" "${_target_iso}"
 }
 
 extract_initramfs_debian() {
-  local INITRD_FILE="${LIVECD_EXTRACT_POINT}/install.amd/initrd.gz"
+  _initrd_file="${LIVECD_EXTRACT_POINT}/install.amd/initrd.gz"
 
-  cd ${INITRAMFS_EXTRACT_POINT}
-  run "zcat ${INITRD_FILE} | cpio -imdv"
-  cd -
+  # Use a subshell to safely change directories and execute cpio
+  (
+    cd "${INITRAMFS_EXTRACT_POINT}" || exit_error "Unable to access ${INITRAMFS_EXTRACT_POINT}"
+    run "zcat \"${_initrd_file}\" | cpio -imdv"
+  )
 }
 
 repack_initramfs_debian() {
-  local INITRD_FILE="${LIVECD_EXTRACT_POINT}/install.amd/initrd.gz"
+  _initrd_file="${LIVECD_EXTRACT_POINT}/install.amd/initrd.gz"
 
-  cd ${INITRAMFS_EXTRACT_POINT}
-  run "find . | cpio -o -H newc | gzip -9 > ${INITRD_FILE}"
+  # Use a subshell to safely change directories and repack initramfs
+  (
+    cd "${INITRAMFS_EXTRACT_POINT}" || exit_error "Unable to access ${INITRAMFS_EXTRACT_POINT}"
+    run "find . | cpio -o -H newc | gzip -9 > \"${_initrd_file}\""
+  )
 }

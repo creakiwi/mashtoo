@@ -25,10 +25,10 @@ ask_confirm_yes() {
 ask() {
   check_arguments $# 1 "ask <prompt>(string) [default_value](any)"
   local _PROMPT="${1}"
-  local _DEFAULT="${2}"
+  local _DEFAULT=""
   local _ANSWER
 
-  if [ -n "${_DEFAULT}" ]; then
+  if [ "${#}" -gt 0 ] && [ -n "${_DEFAULT}" ]; then
     read -r -p "${_PROMPT} [${_DEFAULT}]: " _ANSWER
   else
     read -r -p "${_PROMPT}: " _ANSWER

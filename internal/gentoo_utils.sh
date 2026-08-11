@@ -74,10 +74,10 @@ get_mirrors_list() {
 }
 
 mirrors_select() {
-    check_arguments "${#}" 0 "mirrors_select [max](int)"
+    check_arguments "$#" 0 "mirrors_select [max](int)"
 
     _max=1
-    if [ "${#}" -gt 0 ]; then
+    if [ "$#" -gt 0 ]; then
        _max="${1}"
     fi
 
@@ -86,58 +86,36 @@ mirrors_select() {
 
 	if [ -n "$(find "${_proxies_file}" -mtime -1 2>/dev/null)" ]; then
 		echo_info "Getting best proxy from cache"
-		r_mirrors_select=$(cat "${_proxies_file}"  | head -n "$_max")
+		r_mirrors_select=$(cat "${_proxies_file}" | head -n "$_max")
 	else
-		get_mirrors_list
-		_mirrors="${r_get_mirrors_list}"
-		# Get the total number of mirrors securely in POSIX
-		set -- $_mirrors
-		_total=$#
+		echo_info "Selecting fast Gentoo mirror..." >&2
+		_fast_mirrors="
+https://distfiles.gentoo.org/
+https://gentoo.mirrors.ovh.net/gentoo-distfiles/
+https://gentoo.osuosl.org/
+https://mirror.bytemark.co.uk/gentoo/
+"
+		_best_mirror=""
+		for url in $_fast_mirrors; do
+			if curl -sSL --connect-timeout 2 --max-time 3 -I "$url" >/dev/null 2>&1; then
+				_best_mirror="$url"
+				break
+			fi
+		done
 
-		echo_todo "cache file for proxy"
-		i=0
-	    echo_info "Testing $_total mirrors (this may take a few minutes)..." >&2
+		if [ -z "$_best_mirror" ]; then
+			_best_mirror="https://distfiles.gentoo.org/"
+		fi
 
-		_all_mirrors_select=$(
-			{
-				for url in $_mirrors; do
-					i=$((i + 1))
-
-					# 1. Extract the domain name (split using slashes)
-					host=$(echo "$url" | awk -F/ '{print $3}')
-
-					# Print live progress to stderr
-					printf "\r[%d/%d] Testing %s...       " "$i" "$_total" "$host" >&2
-
-					# 2. Ping: 1 packet (-c 1), 1-second timeout (-W 1)
-					# 3. Extract the time with sed (captures the value after 'time=')
-					latency=$(ping -c 1 -W 1 "$host" 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p')
-
-					# 4. Format the output: Latency MUST stay first for numerical sorting
-					if [ -n "$latency" ]; then
-						echo "$latency $url"
-					else
-						echo "99999 $url"
-					fi
-				done
-
-				# Add a final newline to stderr to clean up the terminal after the loop
-				echo "" >&2
-
-			} | sort -n
-		)
-
-		echo "${_all_mirrors_select}" | awk '{print $2}' |  tr -s '[:blank:]' '\n' > "${_proxies_file}"
-			# 6. keep the top $_max results, and extract ONLY the URL (column 2)
-		r_mirrors_select=$(echo "${_all_mirrors_select}" | head -n "$_max" | awk '{p*rint $2}')
+		echo "$_best_mirror" > "${_proxies_file}"
+		r_mirrors_select="$_best_mirror"
 	fi
-
 
     return 0
 }
 
 verify_stage3_signature() {
-	check_arguments "${#}" "1" "verify_signatures <stage3_path>(string)"
+	check_arguments "$#" "1" "verify_signatures <stage3_path>(string)"
 	_stage3_path="${1}"
 
 	echo_ok "Verify Stage3 signatures"
@@ -163,7 +141,7 @@ verify_stage3_signature() {
 }
 
 download_stage3() {
-	check_arguments "${#}" "1" "mashtoo_installer_at_startup <initramfs_root_dir>(string)"
+	check_arguments "$#" "1" "mashtoo_installer_at_startup <initramfs_root_dir>(string)"
 	_initramfs_root_dir="${1}"
 
 	mirrors_select
@@ -210,5 +188,6 @@ download_stage3() {
 }
 
 run_chronyd() {
+	chown ntp:ntp /run/chrony
 	chronyd -q -u ntp
 }

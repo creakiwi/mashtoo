@@ -23,30 +23,24 @@
 set -eu
 exec > /dev/console 2>&1
 
-set +u
-if [ -f /lib/gentoo/functions.sh ]; then
-    . /lib/gentoo/functions.sh
-elif [ -f /sbin/functions.sh ]; then
-    . /sbin/functions.sh
-fi
-set -u
-
 MASHTOO_DIR="/opt/mashtoo"
 
-export PATH="${PATH}:/usr/libexec/rc/bin"
+#set +eu
+#if [ -f /lib/gentoo/functions.sh ]; then
+#    . /lib/gentoo/functions.sh
+#elif [ -f /sbin/functions.sh ]; then
+#    . /sbin/functions.sh
+#fi
+
+#export PATH="${PATH}:/usr/libexec/rc/bin"
+#set -eu
 
 . "${MASHTOO_DIR}/.env"
 . "${MASHTOO_DIR}/mashtoo.sh"
 
-einfo "Gentoo version of mashtoo-installer"
-einfo "Author Alex Ception <alexandre@creakiwi.com>[https://github.com/alex-ception]"
-
-ebegin "Force locale"
 loadkeys "${LOCALE_KEYMAP}"
-eend "$?"
 
 partitions_create_make_filesystem() {
-einfo "Gentoo version of mashtoo-installer 0"
 	check_arguments $# 1 "partitions_create_make_filesystem <disk_device>(string)"
   local _DISK="${1}"
   local _PART_PREFIX=""
@@ -66,39 +60,47 @@ einfo "Gentoo version of mashtoo-installer 0"
 
 
 	make_filesystem "ext4" "${_boot_part}" "-F"
+	run "fsck.ext4 -y ${_boot_part}"
   make_filesystem "swap" "${_swap_part}" "-f"
   make_filesystem "ext4" "${_main_part}" "-F"
+	run "fsck.ext4 -y ${_main_part}"
 
-	mkdir -p /mnt/gentoo
-	mkdir -p /mnt/gentoo/boot
-	mount "${_boot_part}" /mnt/gentoo
-	mount "${_main_part}" /mnt/gentoo/boot
+	run "mkdir -p /mnt/gentoo"
+	run "mkdir -p /mnt/gentoo/boot"
+}
+
+extract_stage3() {
+	run "tar xpvf /stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner -C /mnt/gentoo"
+}
+
+mount_chroot() {
+	run "cp --dereference /etc/resolv.conf /mnt/gentoo/etc/"
+	run "mount --types proc /proc /mnt/gentoo/proc"
+	run "mount --rbind /sys /mnt/gentoo/sys"
+	run "mount --make-rslave /mnt/gentoo/sys"
+	run "mount --rbind /dev /mnt/gentoo/dev"
+	run "mount --make-rslave /mnt/gentoo/dev"
+	run "mount --bind /run /mnt/gentoo/run"
+	run "mount --make-slave /mnt/gentoo/run"
+
+	run "chroot /mnt/gentoo /bin/bash"
+	run "source /etc/profile"
+	run "export PS1=\"(chroot) ${PS1}\""
 }
 
 summary
 run_chronyd
 partitions_create
-
-cd /mnt/gentoo
-tar xpvf /stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner -C /mnt/gentoo
+extract_stage3
+mount_chroot
 
 # http://gcc.gnu.org/gcc-4.5/changes.html
 # https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
 
-cp --dereference /etc/resolv.conf /mnt/gentoo/etc/
-mount --types proc /proc /mnt/gentoo/proc
-mount --rbind /sys /mnt/gentoo/sys
-mount --make-rslave /mnt/gentoo/sys
-mount --rbind /dev /mnt/gentoo/dev
-mount --make-rslave /mnt/gentoo/dev
-mount --bind /run /mnt/gentoo/run
-mount --make-slave /mnt/gentoo/run
-
-chroot /mnt/gentoo /bin/bash
-source /etc/profile
-export PS1="(chroot) ${PS1}"
-
 oemerge-webrsync
+emerge -pv mirrorselect
+exit 0
+
 
 emerge --ask --verbose --oneshot app-portage/mirrorselect
 mirrorselect -i -o >> /etc/portage/make.conf

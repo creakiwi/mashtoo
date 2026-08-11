@@ -48,7 +48,7 @@ partitions_create() {
 
   ifndef_INSTALL_DEVICE
 
-	if [ -n "${1}" ]; then
+	if [ "${#}" -gt 0 ] && [ -n "${1}" ]; then
 	  _PARTITION_FILE="${1}"
   else
     ifndef_BOOT_FIRMWARE
@@ -231,7 +231,7 @@ extract_squashfs() {
   local SQUASHFS_FILE=${1}
   local EXTRACT_DIR=${2}
 
-  run "unsquashfs -f -q -d ${EXTRACT_DIR} ${SQUASHFS_FILE}"
+  run "unsquashfs -no-xattrs -f -q -d \"${EXTRACT_DIR}\" \"${SQUASHFS_FILE}\""
 }
 
 ## /desc Create/recreate a SquashFS filesystem from directory
@@ -250,7 +250,7 @@ repack_squashfs() {
     OPTIONS="${OPTIONS} ${3}"
   fi
 
-  run "mksquashfs ${DIRECTORY} ${SQUASHFS_FILE}${OPTIONS}"
+  run "mksquashfs \"${DIRECTORY}\" \"${SQUASHFS_FILE}\"${OPTIONS}"
 }
 
 ## /desc Unimplemented
@@ -292,5 +292,7 @@ iso_to_device() {
     exit_error "ISO file not found: ${ISO_FILE}"
   fi
 
+  echo_warn "Wiping partition tables from ${DRIVE}"
+  run "wipefs --force -a ${DRIVE}"
   run "dd if=${ISO_FILE} of=${DRIVE} bs=4096 && sync"
 }

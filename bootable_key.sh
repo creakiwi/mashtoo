@@ -6,12 +6,8 @@ MASHTOO_DIR="."
 
 . "$MASHTOO_DIR/mashtoo.sh"
 
-live_in_initramfs_callback_gentoo() {
-  set_locale "${LOCALE_KEYMAP}" "${LOCALE_LANG}" "${INITRAMFS_EXTRACT_POINT}"
-  #ssh_at_boot "${INITRAMFS_EXTRACT_POINT}"
-  download_stage3 "${INITRAMFS_EXTRACT_POINT}"
-  mashtoo_installer_at_startup "${INITRAMFS_EXTRACT_POINT}"
-}
+# The main installer script is fully agnostic.
+# Distribution-specific callbacks are defined in dist/${DIST}.sh
 
 summary
 check_dependencies

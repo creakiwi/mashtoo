@@ -1,6 +1,19 @@
 copy_files_to_initramfs() {
-  run "cp -R $(custom_generic_dir)/initramfs/. ${INITRAMFS_EXTRACT_POINT}/"
-  run "cp -R $(custom_dist_dir)/initramfs/. ${INITRAMFS_EXTRACT_POINT}/"
+  run "cp -R \"$(custom_generic_dir)\"/initramfs/. \"${INITRAMFS_EXTRACT_POINT}\"/"
+  run "cp -R \"$(custom_dist_dir)\"/initramfs/. \"${INITRAMFS_EXTRACT_POINT}\"/"
+}
+
+apply_templates() {
+  echo_ok "Applying templates (.tpl) from custom files"
+  # Find all .tpl files in the extracted initramfs and process them
+  find "${INITRAMFS_EXTRACT_POINT}" -type f -name "*.tpl" | while read -r _tpl_file; do
+    _dest_file="${_tpl_file%.tpl}"
+    echo_info "Templating ${_tpl_file} -> ${_dest_file}"
+    file_substitute_variables "${_tpl_file}" > "${_dest_file}"
+    rm -f "${_tpl_file}"
+    # Keep the same permissions if it was executable
+    chmod --reference="${_tpl_file}" "${_dest_file}" 2>/dev/null || chmod 755 "${_dest_file}"
+  done
 }
 
 live_in_initramfs() {
@@ -10,10 +23,10 @@ live_in_initramfs() {
     live_in_initramfs_callback
   fi
 
-  if command -v live_in_initramfs_callback_${DIST} >/dev/null 2>&1
+  if command -v "live_in_initramfs_callback_${DIST}" >/dev/null 2>&1
   then
     echo_ok "Entering user defined 'live_in_initramfs_callback_${DIST}'"
-    live_in_initramfs_callback_${DIST}
+    "live_in_initramfs_callback_${DIST}"
   fi
 }
 
@@ -21,8 +34,8 @@ live_in_initramfs() {
 handle_livecd() {
   title "Handle LiveCD"
 
-  local LIVECD_EXTRACT_POINT=$(mount_dir)/livecd
-  local INITRAMFS_EXTRACT_POINT=$(mount_dir)/initramfs
+  LIVECD_EXTRACT_POINT="$(mount_dir)/livecd"
+  INITRAMFS_EXTRACT_POINT="$(mount_dir)/initramfs"
 
   run "rm -rf ${LIVECD_EXTRACT_POINT}/"
   run "mkdir -p ${LIVECD_EXTRACT_POINT}"
@@ -33,26 +46,28 @@ handle_livecd() {
   run "rm -rf ${INITRAMFS_EXTRACT_POINT}/"
   run "mkdir -p ${INITRAMFS_EXTRACT_POINT}"
   run "touch ${INITRAMFS_EXTRACT_POINT}/.gitkeep"
-  if command -v extract_initramfs_${DIST} >/dev/null 2>&1
+  if command -v "extract_initramfs_${DIST}" >/dev/null 2>&1
   then
     echo_ok "Entering '${DIST}' initramfs extract process"
-    extract_initramfs_${DIST}
+    "extract_initramfs_${DIST}"
   else
     exit_error "Distribution '${FBOLD}${DIST}${FBOLD_OFF}' should be handled but no '${FBOLD}extract_initramfs_${DIST}${FBOLD_OFF}' function found in '${FBOLD}${DIST_FILE}${FBOLD_OFF}'."
   fi
 
   copy_files_to_initramfs
+  apply_templates
   live_in_initramfs
 
-  reprap ${INITRAMFS_EXTRACT_POINT}/opt
+  reprap "${INITRAMFS_EXTRACT_POINT}/opt"
 
-  if command -v repack_initramfs_${DIST} >/dev/null 2>&1
+  if command -v "repack_initramfs_${DIST}" >/dev/null 2>&1
   then
     echo_ok "Entering '${DIST}' repack initramfs process"
-    repack_initramfs_${DIST}
+    "repack_initramfs_${DIST}"
   else
     exit_error "Distribution '${FBOLD}${DIST}${FBOLD_OFF}' should be handled but no '${FBOLD}repack_initramfs_${DIST}${FBOLD_OFF}' function found in '${FBOLD}${DIST_FILE}${FBOLD_OFF}'."
   fi
+
 
   repack_iso_xorriso_from_report "$(tmp_dir)/boot_info" "${LIVECD_EXTRACT_POINT}" "$(tmp_dir)/$(livecd_name)-mashtoo.iso"
   iso_to_device "$(tmp_dir)/$(livecd_name)-mashtoo.iso" "${USB_DEVICE}"

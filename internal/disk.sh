@@ -143,7 +143,7 @@ make_filesystem() {
   fi
 
   if [ "${_TYPE}" = "ext4" ] && [ "$(device_size "${_DEVICE}")" -lt $((2**33)) ]; then
-    _OPTIONS="${OPTIONS} -T small"
+    _OPTIONS="${_OPTIONS} -T small"
   fi
 
   case "${_TYPE}" in
